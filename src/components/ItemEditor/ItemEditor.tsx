@@ -10,6 +10,40 @@ export const inputCls =
   'outline-none transition-colors focus:border-blue focus:ring-1 focus:ring-blue/40';
 
 /**
+ * 名稱 + 刪除：名稱當成這一列的標題，不要再包一層輸入框的邊，
+ * hover / focus 才浮出底色；刪除鈕也拿掉方框。收支兩列共用。
+ */
+export function RowHeader({
+  item,
+  onChange,
+  onRemove,
+}: {
+  item: Item;
+  onChange: (patch: Partial<Item>) => void;
+  onRemove: () => void;
+}) {
+  const { t } = useLang();
+  return (
+    <div className="flex items-center gap-1">
+      <input
+        value={item.name}
+        placeholder={t.namePh}
+        onChange={(e) => onChange({ name: e.target.value })}
+        className="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-[15px] font-medium text-primary outline-none transition-colors placeholder:font-normal placeholder:text-ghost hover:bg-hover focus:bg-hover"
+      />
+      <button
+        onClick={onRemove}
+        aria-label={t.remove}
+        title={t.remove}
+        className="shrink-0 rounded-md px-2 py-1 text-lg leading-none text-ghost transition-colors hover:bg-hover hover:text-red"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+/**
  * 起迄月份：兩個 select 併成一個帶框的區間控制項，
  * 中間用箭頭連起來，比兩個各自帶框的下拉好讀。
  */
@@ -33,10 +67,11 @@ export function MonthRange({
     [keys, lang],
   );
 
-  // 併排後 chevron 要收窄一點，否則兩個箭頭把中間的文字擠掉
-  const selectCls =
-    'min-w-0 flex-1 cursor-pointer rounded-md bg-transparent py-1.5 pl-2 pr-5 text-primary ' +
-    'outline-none hover:bg-hover [background-position:right_0.3rem_center] [background-size:0.6rem]';
+  // 兩個 chevron 併排會跟中間的箭頭打架，左邊那顆拿掉，整組只留右端一個
+  const base =
+    'min-w-0 flex-1 cursor-pointer rounded-md bg-transparent py-1.5 text-primary outline-none hover:bg-hover';
+  const startCls = `${base} bg-none px-2`;
+  const endCls = `${base} pl-2 pr-5 [background-position:right_0.35rem_center] [background-size:0.65rem]`;
 
   return (
     <div className="col-span-2 flex flex-col gap-1">
@@ -49,7 +84,7 @@ export function MonthRange({
             const startMonth = Number(e.target.value);
             onChange({ startMonth, endMonth: Math.max(startMonth, item.endMonth) });
           }}
-          className={selectCls}
+          className={startCls}
         >
           {opts}
         </select>
@@ -63,7 +98,7 @@ export function MonthRange({
             const endMonth = Number(e.target.value);
             onChange({ endMonth, startMonth: Math.min(endMonth, item.startMonth) });
           }}
-          className={selectCls}
+          className={endCls}
         >
           {opts}
         </select>
@@ -105,7 +140,7 @@ export function ItemEditor({ items, keys, onChange }: Props) {
   const remove = (id: string) => onChange(items.filter((it) => it.id !== id));
 
   return (
-    <section className="overflow-hidden rounded-xl border border-line bg-card">
+    <section className="card overflow-hidden">
       <div className="flex border-b border-line">
         {(['expense', 'income'] as ItemType[]).map((k) => {
           const on = tab === k;

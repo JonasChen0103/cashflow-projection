@@ -16,8 +16,8 @@ import { useLang } from '../i18n';
 // SVG 屬性吃不到 Tailwind class，這幾個值要跟 globals.css 的 --color-* 對齊
 const BLUE = '#4f8cff';
 const RED = '#ff6b6b';
-const SURFACE = '#171a27';
-const LINE = '#2b2f44';
+const SURFACE = '#141827';
+const LINE = '#242941';
 
 /** 結餘為負的月份標紅點；2px 底色描邊讓它在線上仍看得清 */
 function BalanceDot(props: { cx?: number; cy?: number; payload?: MonthProjection }) {
@@ -61,15 +61,15 @@ export function ProjectionChart({ data }: { data: MonthProjection[] }) {
   );
 
   return (
-    <section className="rounded-xl border border-line bg-card p-4 sm:p-5">
+    <section className="card p-4 sm:p-5">
       <h2 className="mb-4 text-sm font-medium text-secondary">{t.monthBal}</h2>
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 8, left: -8 }}>
             <defs>
               <linearGradient id="balFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={BLUE} stopOpacity={0.18} />
-                <stop offset="100%" stopColor={BLUE} stopOpacity={0} />
+                <stop offset="0%" stopColor={BLUE} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={BLUE} stopOpacity={0.02} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke={LINE} vertical={false} />

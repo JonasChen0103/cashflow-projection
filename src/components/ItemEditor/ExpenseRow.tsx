@@ -1,7 +1,7 @@
 import type { Item } from '../../lib/types';
 import { fmt, monthlyOf, totalInterest } from '../../lib/calc';
 import { useLang } from '../../i18n';
-import { inputCls, MonthRange } from './ItemEditor';
+import { inputCls, MonthRange, RowHeader } from './ItemEditor';
 
 interface Props {
   item: Item;
@@ -16,23 +16,8 @@ export function ExpenseRow({ item, keys, onChange, onRemove }: Props) {
   const interest = totalInterest(item);
 
   return (
-    <div className="rounded-lg border border-line bg-input/40 p-3">
-      <div className="flex gap-2">
-        <input
-          value={item.name}
-          placeholder={t.namePh}
-          onChange={(e) => onChange({ name: e.target.value })}
-          className={`${inputCls} min-w-0 flex-1`}
-        />
-        <button
-          onClick={onRemove}
-          aria-label={t.remove}
-          title={t.remove}
-          className="rounded-lg border border-line px-2.5 text-dim hover:border-red hover:text-red"
-        >
-          ×
-        </button>
-      </div>
+    <div className="rounded-lg bg-white/[0.025] p-3">
+      <RowHeader item={item} onChange={onChange} onRemove={onRemove} />
 
       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <label className="flex flex-col gap-1">

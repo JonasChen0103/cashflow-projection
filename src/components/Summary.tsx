@@ -6,19 +6,25 @@ function Tile({
   label,
   value,
   note,
-  tone = 'text-primary',
-  big = false,
+  dot,
+  alert = false,
 }: {
   label: string;
   value: string;
   note?: string;
-  tone?: string;
-  big?: boolean;
+  /** 收支的身分靠這顆小色點，數字本身維持中性色 */
+  dot?: string;
+  alert?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-line bg-card px-4 py-3">
-      <p className="text-xs text-muted">{label}</p>
-      <p className={`mt-1 font-semibold ${big ? 'text-2xl' : 'text-lg'} ${tone}`}>{value}</p>
+    <div className="card px-4 py-3">
+      <p className="flex items-center gap-1.5 text-xs text-muted">
+        {dot && <span className={`inline-block size-1.5 rounded-full ${dot}`} />}
+        {label}
+      </p>
+      <p className={`mt-1.5 text-xl font-semibold ${alert ? 'text-red' : 'text-primary'}`}>
+        {value}
+      </p>
       <p className="mt-0.5 h-4 text-[11px] text-dim">{note ?? ''}</p>
     </div>
   );
@@ -35,18 +41,16 @@ export function Summary({ data }: { data: MonthProjection[] }) {
         label={t.endBal}
         value={fmt(endBalance)}
         note={last && fmtMonthYear(last.month, lang)}
-        tone={endBalance < 0 ? 'text-red' : 'text-primary'}
-        big
+        alert={endBalance < 0}
       />
       <Tile
         label={t.lowBal}
         value={low ? fmt(low.balance) : '—'}
         note={low && fmtMonthYear(low.month, lang)}
-        tone={low && low.balance < 0 ? 'text-red' : 'text-secondary'}
-        big
+        alert={!!low && low.balance < 0}
       />
-      <Tile label={t.totalIn} value={fmt(totalIncome)} tone="text-green" />
-      <Tile label={t.totalOut} value={fmt(totalExpense)} tone="text-red" />
+      <Tile label={t.totalIn} value={fmt(totalIncome)} dot="bg-green" />
+      <Tile label={t.totalOut} value={fmt(totalExpense)} dot="bg-red" />
     </section>
   );
 }

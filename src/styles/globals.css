@@ -5,11 +5,11 @@
  * 備選：暖墨 base #14121a / line #302a3d；藍墨 base #0b1220 / line #23304a
  */
 @theme {
-  --color-base: #0c0e15;
-  --color-card: #171a27;
-  --color-input: #10121c;
-  --color-hover: #1f2334;
-  --color-line: #2b2f44;
+  --color-base: #090b12;
+  --color-card: #141827;
+  --color-input: #0e111d;
+  --color-hover: #1c2132;
+  --color-line: #242941;
 
   --color-primary: #e8e9ed;
   --color-secondary: #cdd0dc;
@@ -36,7 +36,7 @@ html {
 body {
   /* 頂端一圈很淡的冷光，讓大片深色不至於死板；捲動時固定不跟著跑 */
   background:
-    radial-gradient(900px 480px at 50% -15%, rgba(79, 140, 255, 0.1), transparent 70%),
+    radial-gradient(1100px 620px at 50% -10%, rgba(79, 140, 255, 0.17), transparent 68%),
     var(--color-base);
   background-attachment: fixed;
   color: var(--color-primary);
@@ -88,4 +88,16 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
 
+}
+
+@layer components {
+  /* 每張卡片都是同一組邊框 + 內光 + 落影，別再一路複製 class 串 */
+  .card {
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-line);
+    background-color: var(--color-card);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.035),
+      0 10px 30px -18px rgba(0, 0, 0, 0.9);
+  }
 }

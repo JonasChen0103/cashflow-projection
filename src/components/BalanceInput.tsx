@@ -27,7 +27,7 @@ export function BalanceInput({
   useEffect(() => setDraft(String(months)), [months]);
 
   return (
-    <section className="grid grid-cols-1 gap-4 rounded-xl border border-line bg-card p-4 sm:grid-cols-3 sm:p-5">
+    <section className="card grid grid-cols-1 gap-4 p-4 sm:grid-cols-3 sm:p-5">
       <label className="block">
         <span className="text-xs text-muted">{t.curBal}</span>
         <input
