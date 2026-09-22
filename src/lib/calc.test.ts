@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import { calcMonthly, buildProjection, monthLabels, rangeLabel } from './calc.ts';
+import type { Item } from './types.ts';
+
+// 零利率：本金平均攤
+assert.equal(calcMonthly(12000, 0, 12), 1000);
+assert.equal(calcMonthly(1000, 5, 0), 0);
+
+// 有利率：月繳 > 本金/期數，且總付款 = 本金 + 利息
+const pmt = calcMonthly(100000, 12, 12);
+assert.ok(pmt > 100000 / 12);
+assert.ok(Math.abs(pmt - 8884.88) < 0.01, `pmt=${pmt}`);
+
+// 走勢：收入 3 個月、支出 12 期零利率
+const items: Item[] = [
+  { id: 'a', name: 'salary', type: 'income', amount: 50000, apr: 0, startMonth: 0, endMonth: 2 },
+  { id: 'b', name: 'phone', type: 'expense', amount: 24000, apr: 0, startMonth: 0, endMonth: 11 },
+];
+const p = buildProjection(10000, items, monthLabels('2026-09', 'en'));
+assert.equal(p.length, 12);
+assert.equal(p[0].income, 50000);
+assert.equal(p[0].expense, 2000);
+assert.equal(p[0].balance, 58000);
+assert.equal(p[3].income, 0); // 收入已結束
+assert.equal(p[11].balance, 10000 + 50000 * 3 - 24000);
+
+// 標籤與區間跨年
+assert.deepEqual(monthLabels('2026-09', 'en').slice(0, 5), ['Sep', 'Oct', 'Nov', 'Dec', 'Jan']);
+assert.equal(monthLabels('2026-09', 'zh')[0], '9月');
+assert.equal(rangeLabel('2026-09', 'en'), 'Sep 2026 — Aug 2027');
+assert.equal(rangeLabel('2026-09', 'zh'), '2026/09 — 2027/08');
+
+console.log('ok');

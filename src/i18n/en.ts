@@ -1,0 +1,35 @@
+import type zh from './zh-TW';
+
+const en: typeof zh = {
+  title: 'Cash Flow Projection',
+  curBal: 'Current Balance',
+  startDate: 'Start Month',
+  monthBal: 'Monthly Balance',
+  expense: 'Expenses',
+  income: 'Income',
+  name: 'Name',
+  namePh: 'Item name',
+  principal: 'Principal',
+  apr: 'APR %',
+  start: 'From',
+  end: 'To',
+  monthlyIncome: 'Monthly',
+  addExp: '+ Add Expense',
+  addInc: '+ Add Income',
+  empty: 'No items yet — add one below.',
+  remove: 'Remove',
+  detail: 'Monthly Breakdown',
+  hMonth: 'Month',
+  hIncome: 'Income',
+  hExpense: 'Expense',
+  hNet: 'Net',
+  hBal: 'Balance',
+  periods: ' periods',
+  mo: 'Monthly',
+  intTotal: 'Interest',
+  reset: 'Clear all',
+  resetConfirm: 'Clear all data? This cannot be undone.',
+  footer: 'Installments with APR use standard amortization; your bank statement is authoritative.',
+};
+
+export default en;

@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --color-base: #12141e;
+  --color-card: #181a28;
+  --color-input: #161825;
+  --color-hover: #1e2030;
+  --color-line: #2e3148;
+
+  --color-primary: #e8e9ed;
+  --color-secondary: #cdd0dc;
+  --color-muted: #8b8d97;
+  --color-dim: #5a5d6e;
+  --color-ghost: #3a3d4a;
+
+  --color-green: #4ecb71;
+  --color-red: #ff6b6b;
+  --color-blue: #4f8cff;
+  --color-amber: #ffb86c;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-base);
+  color: var(--color-primary);
+  font-family: ui-sans-serif, system-ui, "Noto Sans TC", sans-serif;
+}
+
+/* 數字對齊 */
+input[type="number"],
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 去掉 number input 的上下箭頭 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
