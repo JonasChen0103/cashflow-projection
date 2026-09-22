@@ -13,9 +13,11 @@ import type { Lang, MonthProjection } from '../lib/types';
 import { chartTicks, fmt, fmtMonth, fmtMonthYear } from '../lib/calc';
 import { useLang } from '../i18n';
 
+// SVG 屬性吃不到 Tailwind class，這幾個值要跟 globals.css 的 --color-* 對齊
 const BLUE = '#4f8cff';
 const RED = '#ff6b6b';
-const SURFACE = '#181a28';
+const SURFACE = '#171a27';
+const LINE = '#2b2f44';
 
 /** 結餘為負的月份標紅點；2px 底色描邊讓它在線上仍看得清 */
 function BalanceDot(props: { cx?: number; cy?: number; payload?: MonthProjection }) {
@@ -70,14 +72,14 @@ export function ProjectionChart({ data }: { data: MonthProjection[] }) {
                 <stop offset="100%" stopColor={BLUE} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#2e3148" vertical={false} />
+            <CartesianGrid stroke={LINE} vertical={false} />
             <XAxis
               dataKey="month"
               ticks={ticks}
               interval={0}
               height={38}
               tick={<MonthTick lang={lang} yearTicks={yearTicks} />}
-              axisLine={{ stroke: '#2e3148' }}
+              axisLine={{ stroke: LINE }}
               tickLine={false}
             />
             <YAxis
@@ -92,7 +94,7 @@ export function ProjectionChart({ data }: { data: MonthProjection[] }) {
               cursor={{ stroke: '#5a5d6e' }}
               contentStyle={{
                 background: SURFACE,
-                border: '1px solid #2e3148',
+                border: `1px solid ${LINE}`,
                 borderRadius: 10,
                 color: '#e8e9ed',
                 fontSize: 13,

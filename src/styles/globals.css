@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
+/*
+ * 底色只由這五個變數決定，換配色改這裡就好。
+ * 備選：暖墨 base #14121a / line #302a3d；藍墨 base #0b1220 / line #23304a
+ */
 @theme {
-  --color-base: #12141e;
-  --color-card: #181a28;
-  --color-input: #161825;
-  --color-hover: #1e2030;
-  --color-line: #2e3148;
+  --color-base: #0c0e15;
+  --color-card: #171a27;
+  --color-input: #10121c;
+  --color-hover: #1f2334;
+  --color-line: #2b2f44;
 
   --color-primary: #e8e9ed;
   --color-secondary: #cdd0dc;
@@ -19,12 +23,22 @@
   --color-amber: #ffb86c;
 }
 
+/*
+ * 全部放進 @layer base：未分層的規則會蓋過 Tailwind 的 utilities，
+ * 下面 select 的 padding / chevron 位置就沒辦法再用 class 個別覆寫。
+ */
+@layer base {
+
 html {
   color-scheme: dark;
 }
 
 body {
-  background: var(--color-base);
+  /* 頂端一圈很淡的冷光，讓大片深色不至於死板；捲動時固定不跟著跑 */
+  background:
+    radial-gradient(900px 480px at 50% -15%, rgba(79, 140, 255, 0.1), transparent 70%),
+    var(--color-base);
+  background-attachment: fixed;
   color: var(--color-primary);
   font-family: ui-sans-serif, system-ui, "Noto Sans TC", sans-serif;
 }
@@ -50,4 +64,28 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* 原生 select 的系統箭頭在深色卡片上很突兀，換成自己畫的 chevron */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%238b8d97' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 0.7rem;
+  padding-right: 1.85rem;
+}
+
+/* 展開的清單跟著卡片色走，而不是系統預設 */
+select option {
+  background-color: var(--color-card);
+  color: var(--color-primary);
+}
+
+/* type=month 的日曆圖示在深色下偏暗 */
+input[type="month"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+  cursor: pointer;
+}
+
 }

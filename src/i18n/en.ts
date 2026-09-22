@@ -16,6 +16,7 @@ const en: typeof zh = {
   namePh: 'Item name',
   principal: 'Principal',
   apr: 'APR %',
+  itemRange: 'Range',
   start: 'From',
   end: 'To',
   monthlyIncome: 'Monthly',

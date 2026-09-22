@@ -9,7 +9,10 @@ export const inputCls =
   'rounded-lg border border-line bg-input px-2.5 py-1.5 text-primary placeholder:text-ghost ' +
   'outline-none transition-colors focus:border-blue focus:ring-1 focus:ring-blue/40';
 
-/** 起迄月份選單，收支列共用 */
+/**
+ * 起迄月份：兩個 select 併成一個帶框的區間控制項，
+ * 中間用箭頭連起來，比兩個各自帶框的下拉好讀。
+ */
 export function MonthRange({
   item,
   keys,
@@ -30,35 +33,42 @@ export function MonthRange({
     [keys, lang],
   );
 
+  // 併排後 chevron 要收窄一點，否則兩個箭頭把中間的文字擠掉
+  const selectCls =
+    'min-w-0 flex-1 cursor-pointer rounded-md bg-transparent py-1.5 pl-2 pr-5 text-primary ' +
+    'outline-none hover:bg-hover [background-position:right_0.3rem_center] [background-size:0.6rem]';
+
   return (
-    <>
-      <label className="flex flex-col gap-1">
-        <span className="text-[11px] text-muted">{t.start}</span>
+    <div className="col-span-2 flex flex-col gap-1">
+      <span className="text-[11px] text-muted">{t.itemRange}</span>
+      <div className="flex items-center rounded-lg border border-line bg-input px-1 transition-colors focus-within:border-blue">
         <select
+          aria-label={t.start}
           value={item.startMonth}
           onChange={(e) => {
             const startMonth = Number(e.target.value);
             onChange({ startMonth, endMonth: Math.max(startMonth, item.endMonth) });
           }}
-          className={inputCls}
+          className={selectCls}
         >
           {opts}
         </select>
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-[11px] text-muted">{t.end}</span>
+        <span aria-hidden className="shrink-0 px-0.5 text-dim">
+          →
+        </span>
         <select
+          aria-label={t.end}
           value={item.endMonth}
           onChange={(e) => {
             const endMonth = Number(e.target.value);
             onChange({ endMonth, startMonth: Math.min(endMonth, item.startMonth) });
           }}
-          className={inputCls}
+          className={selectCls}
         >
           {opts}
         </select>
-      </label>
-    </>
+      </div>
+    </div>
   );
 }
 

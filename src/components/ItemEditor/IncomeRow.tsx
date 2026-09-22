@@ -33,7 +33,7 @@ export function IncomeRow({ item, keys, onChange, onRemove }: Props) {
         </button>
       </div>
 
-      <div className="mt-2 grid grid-cols-3 gap-2">
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
         <label className="flex flex-col gap-1">
           <span className="text-[11px] text-muted">{t.monthlyIncome}</span>
           <input

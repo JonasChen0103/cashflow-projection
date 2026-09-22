@@ -14,6 +14,7 @@ export default {
   namePh: '項目名稱',
   principal: '本金',
   apr: '年利率',
+  itemRange: '期間',
   start: '起始',
   end: '結束',
   monthlyIncome: '月收入',
