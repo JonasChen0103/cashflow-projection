@@ -1,5 +1,4 @@
 import type { Item, MonthProjection } from './types';
-import { MONTHS } from './types';
 
 /** 千分位顯示 */
 export const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
@@ -57,22 +56,31 @@ export function buildProjection(
   });
 }
 
-/** "2026-09" → 12 個月標籤，依語言格式化 */
-export function monthLabels(startDate: string, lang: 'zh' | 'en'): string[] {
+const EN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * "2026-09" → n 個月標籤，依語言格式化。
+ * 超過一年時帶上西元年後兩碼，否則同月份名稱會重複而分不出年。
+ */
+export function monthLabels(startDate: string, lang: 'zh' | 'en', months: number): string[] {
   const [y, m] = startDate.split('-').map(Number);
-  const en = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return Array.from({ length: MONTHS }, (_, i) => {
+  const withYear = months > 12;
+  return Array.from({ length: months }, (_, i) => {
     const d = new Date(y, m - 1 + i, 1);
-    return lang === 'zh' ? `${d.getMonth() + 1}月` : en[d.getMonth()];
+    const yy = String(d.getFullYear()).slice(-2);
+    if (lang === 'zh') {
+      return withYear ? `${yy}/${String(d.getMonth() + 1).padStart(2, '0')}` : `${d.getMonth() + 1}月`;
+    }
+    return withYear ? `${EN_MONTHS[d.getMonth()]} ${yy}` : EN_MONTHS[d.getMonth()];
   });
 }
 
-/** "2026-09" → "2026/09 — 2027/08" / "Sep 2026 — Aug 2027" */
-export function rangeLabel(startDate: string, lang: 'zh' | 'en'): string {
+/** "2026-09" + 12 → "2026/09 — 2027/08" / "Sep 2026 — Aug 2027" */
+export function rangeLabel(startDate: string, lang: 'zh' | 'en', months: number): string {
   const [y, m] = startDate.split('-').map(Number);
   const from = new Date(y, m - 1, 1);
-  const to = new Date(y, m - 2 + MONTHS, 1);
-  const en = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const to = new Date(y, m - 2 + months, 1);
+  const en = EN_MONTHS;
   const fmt = (d: Date) =>
     lang === 'zh'
       ? `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`

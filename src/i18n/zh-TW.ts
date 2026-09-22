@@ -2,6 +2,7 @@ export default {
   title: '現金流預測',
   curBal: '目前存款',
   startDate: '起始月份',
+  periodLen: '預測期間（月）',
   monthBal: '每月結餘',
   expense: '支出',
   income: '收入',

@@ -30,12 +30,20 @@ export interface AppState {
   lang: Lang;
   /** "2026-09" — 預測起始年月 */
   startDate: string;
+  /** 預測期間長度（月） */
+  months: number;
 }
 
-export const MONTHS = 12;
+export const DEFAULT_MONTHS = 12;
+export const MIN_MONTHS = 1;
+/** 40 年；再長的預測沒有意義，也避免手滑打出十萬列表格 */
+export const MAX_MONTHS = 480;
+
+export const clampMonths = (n: number) =>
+  Math.min(MAX_MONTHS, Math.max(MIN_MONTHS, Math.round(n) || DEFAULT_MONTHS));
 
 export function emptyState(): AppState {
   const now = new Date();
   const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  return { balance: 0, items: [], lang: 'zh', startDate };
+  return { balance: 0, items: [], lang: 'zh', startDate, months: DEFAULT_MONTHS };
 }

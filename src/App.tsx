@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { LangContext, dicts } from './i18n';
 import { buildProjection, monthLabels, rangeLabel } from './lib/calc';
-import { emptyState } from './lib/types';
+import { clampMonths, emptyState } from './lib/types';
 import type { AppState } from './lib/types';
 import { Header } from './components/Header';
 import { BalanceInput } from './components/BalanceInput';
@@ -16,9 +16,25 @@ export default function App() {
   const [state, setState] = useLocalStorage<AppState>(KEY, emptyState);
   const patch = (p: Partial<AppState>) => setState((s) => ({ ...s, ...p }));
 
+  // 舊的 localStorage 資料沒有 months，讀進來一律夾在合法範圍內
+  const months = clampMonths(state.months);
+
+  /** 縮短期間時，超出範圍的項目跟著收尾，否則起迄選單會停在不存在的月份 */
+  const setMonths = (n: number) => {
+    const m = clampMonths(n);
+    patch({
+      months: m,
+      items: state.items.map((it) => ({
+        ...it,
+        startMonth: Math.min(it.startMonth, m - 1),
+        endMonth: Math.min(it.endMonth, m - 1),
+      })),
+    });
+  };
+
   const labels = useMemo(
-    () => monthLabels(state.startDate, state.lang),
-    [state.startDate, state.lang],
+    () => monthLabels(state.startDate, state.lang, months),
+    [state.startDate, state.lang, months],
   );
   const data = useMemo(
     () => buildProjection(state.balance, state.items, labels),
@@ -30,12 +46,14 @@ export default function App() {
   return (
     <LangContext.Provider value={{ lang: state.lang, t, setLang: (lang) => patch({ lang }) }}>
       <main className="mx-auto flex max-w-[720px] flex-col gap-4 px-4 py-8">
-        <Header range={rangeLabel(state.startDate, state.lang)} />
+        <Header range={rangeLabel(state.startDate, state.lang, months)} />
         <BalanceInput
           balance={state.balance}
           startDate={state.startDate}
+          months={months}
           onBalance={(balance) => patch({ balance })}
           onStartDate={(startDate) => patch({ startDate })}
+          onMonths={setMonths}
         />
         <ItemEditor items={state.items} labels={labels} onChange={(items) => patch({ items })} />
         <ProjectionChart data={data} />

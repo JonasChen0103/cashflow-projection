@@ -4,6 +4,7 @@ const en: typeof zh = {
   title: 'Cash Flow Projection',
   curBal: 'Current Balance',
   startDate: 'Start Month',
+  periodLen: 'Period (months)',
   monthBal: 'Monthly Balance',
   expense: 'Expenses',
   income: 'Income',

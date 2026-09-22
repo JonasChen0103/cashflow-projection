@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { Item, ItemType } from '../../lib/types';
-import { MONTHS } from '../../lib/types';
 import { useLang } from '../../i18n';
 import { ExpenseRow } from './ExpenseRow';
 import { IncomeRow } from './IncomeRow';
@@ -79,7 +78,7 @@ export function ItemEditor({ items, labels, onChange }: Props) {
         amount: 0,
         apr: 0,
         startMonth: 0,
-        endMonth: MONTHS - 1,
+        endMonth: labels.length - 1,
       },
     ]);
 

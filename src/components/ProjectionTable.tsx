@@ -9,9 +9,9 @@ export function ProjectionTable({ data }: { data: MonthProjection[] }) {
   return (
     <section className="rounded-xl border border-line bg-card p-4">
       <h2 className="mb-3 text-sm text-muted">{t.detail}</h2>
-      <div className="overflow-x-auto">
+      <div className="max-h-[70vh] overflow-auto">
         <table className="w-full min-w-[420px] text-right text-sm">
-          <thead>
+          <thead className="sticky top-0 bg-card">
             <tr className="border-b border-line text-xs text-muted">
               <th className="py-2 text-left font-normal">{t.hMonth}</th>
               <th className="py-2 font-normal">{t.hIncome}</th>
