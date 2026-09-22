@@ -15,6 +15,7 @@ export interface Item {
 }
 
 export interface MonthProjection {
+  /** "2026-09" — 語言無關的月份 key，顯示時才格式化 */
   month: string;
   income: number;
   expense: number;

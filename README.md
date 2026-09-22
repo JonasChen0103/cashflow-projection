@@ -30,10 +30,11 @@ Deploying under a sub-path (e.g. GitHub Pages): `BASE_PATH=/cashflow-projection/
   with standard amortization; set APR to `0` for interest-free installments.
 - **Income** — enter the monthly amount and the months it applies to.
 - **Chart** — projected balance over the window. Red dots mark negative balance.
+  The x-axis thins to ~12 ticks however long the window is, and prints the year
+  on a second line only when it changes.
 - **Start month / Period** — set where the window begins and how many months it
-  covers. Past 12 months, labels switch to `26/09` / `Sep 26` so years stay
-  distinguishable. Shortening the window pulls any item that ran past the new
-  end back to the last month.
+  covers. Shortening the window pulls any item that ran past the new end back to
+  the last month.
 
 ## Tech Stack
 

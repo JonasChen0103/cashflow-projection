@@ -5,12 +5,12 @@ import { inputCls, MonthRange } from './ItemEditor';
 
 interface Props {
   item: Item;
-  labels: string[];
+  keys: string[];
   onChange: (patch: Partial<Item>) => void;
   onRemove: () => void;
 }
 
-export function ExpenseRow({ item, labels, onChange, onRemove }: Props) {
+export function ExpenseRow({ item, keys, onChange, onRemove }: Props) {
   const { t } = useLang();
   const periods = item.endMonth - item.startMonth + 1;
   const interest = totalInterest(item);
@@ -56,7 +56,7 @@ export function ExpenseRow({ item, labels, onChange, onRemove }: Props) {
             className={inputCls}
           />
         </label>
-        <MonthRange item={item} labels={labels} onChange={onChange} />
+        <MonthRange item={item} keys={keys} onChange={onChange} />
       </div>
 
       <p className="mt-2 text-xs text-dim">

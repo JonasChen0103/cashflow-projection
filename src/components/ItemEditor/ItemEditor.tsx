@@ -1,29 +1,35 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Item, ItemType } from '../../lib/types';
+import { fmtMonthYear } from '../../lib/calc';
 import { useLang } from '../../i18n';
 import { ExpenseRow } from './ExpenseRow';
 import { IncomeRow } from './IncomeRow';
 
 export const inputCls =
   'rounded-lg border border-line bg-input px-2.5 py-1.5 text-primary placeholder:text-ghost ' +
-  'outline-none focus:border-blue';
+  'outline-none transition-colors focus:border-blue focus:ring-1 focus:ring-blue/40';
 
 /** 起迄月份選單，收支列共用 */
 export function MonthRange({
   item,
-  labels,
+  keys,
   onChange,
 }: {
   item: Item;
-  labels: string[];
+  keys: string[];
   onChange: (patch: Partial<Item>) => void;
 }) {
-  const { t } = useLang();
-  const opts = labels.map((l, i) => (
-    <option key={i} value={i}>
-      {l}
-    </option>
-  ));
+  const { lang, t } = useLang();
+  const opts = useMemo(
+    () =>
+      keys.map((k, i) => (
+        <option key={k} value={i}>
+          {fmtMonthYear(k, lang)}
+        </option>
+      )),
+    [keys, lang],
+  );
+
   return (
     <>
       <label className="flex flex-col gap-1">
@@ -58,15 +64,16 @@ export function MonthRange({
 
 interface Props {
   items: Item[];
-  labels: string[];
+  keys: string[];
   onChange: (items: Item[]) => void;
 }
 
-export function ItemEditor({ items, labels, onChange }: Props) {
+export function ItemEditor({ items, keys, onChange }: Props) {
   const { t } = useLang();
   const [tab, setTab] = useState<ItemType>('expense');
 
   const visible = items.filter((it) => it.type === tab);
+  const count = (k: ItemType) => items.filter((it) => it.type === k).length;
 
   const add = () =>
     onChange([
@@ -78,7 +85,7 @@ export function ItemEditor({ items, labels, onChange }: Props) {
         amount: 0,
         apr: 0,
         startMonth: 0,
-        endMonth: labels.length - 1,
+        endMonth: keys.length - 1,
       },
     ]);
 
@@ -88,33 +95,35 @@ export function ItemEditor({ items, labels, onChange }: Props) {
   const remove = (id: string) => onChange(items.filter((it) => it.id !== id));
 
   return (
-    <section className="rounded-xl border border-line bg-card">
+    <section className="overflow-hidden rounded-xl border border-line bg-card">
       <div className="flex border-b border-line">
-        {(['expense', 'income'] as ItemType[]).map((k) => (
-          <button
-            key={k}
-            onClick={() => setTab(k)}
-            className={`flex-1 px-4 py-2.5 text-sm transition-colors ${
-              tab === k
-                ? k === 'expense'
-                  ? 'text-red border-b-2 border-red'
-                  : 'text-green border-b-2 border-green'
-                : 'text-dim hover:text-secondary'
-            }`}
-          >
-            {k === 'expense' ? t.expense : t.income}
-          </button>
-        ))}
+        {(['expense', 'income'] as ItemType[]).map((k) => {
+          const on = tab === k;
+          const accent = k === 'expense' ? 'text-red border-red' : 'text-green border-green';
+          return (
+            <button
+              key={k}
+              onClick={() => setTab(k)}
+              aria-pressed={on}
+              className={`flex-1 border-b-2 px-4 py-3 text-sm transition-colors ${
+                on ? accent : 'border-transparent text-dim hover:bg-hover hover:text-secondary'
+              }`}
+            >
+              {k === 'expense' ? t.expense : t.income}
+              {count(k) > 0 && <span className="ml-1.5 text-xs text-dim">{count(k)}</span>}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="flex flex-col gap-3 p-4">
-        {visible.length === 0 && <p className="py-4 text-center text-sm text-dim">{t.empty}</p>}
+      <div className="flex flex-col gap-3 p-4 sm:p-5">
+        {visible.length === 0 && <p className="py-6 text-center text-sm text-dim">{t.empty}</p>}
         {visible.map((it) =>
           it.type === 'expense' ? (
             <ExpenseRow
               key={it.id}
               item={it}
-              labels={labels}
+              keys={keys}
               onChange={(p) => patch(it.id, p)}
               onRemove={() => remove(it.id)}
             />
@@ -122,7 +131,7 @@ export function ItemEditor({ items, labels, onChange }: Props) {
             <IncomeRow
               key={it.id}
               item={it}
-              labels={labels}
+              keys={keys}
               onChange={(p) => patch(it.id, p)}
               onRemove={() => remove(it.id)}
             />
@@ -130,7 +139,7 @@ export function ItemEditor({ items, labels, onChange }: Props) {
         )}
         <button
           onClick={add}
-          className="rounded-lg border border-dashed border-line py-2 text-sm text-muted hover:bg-hover hover:text-secondary"
+          className="rounded-lg border border-dashed border-line py-2.5 text-sm text-muted transition-colors hover:border-blue/60 hover:bg-hover hover:text-secondary"
         >
           {tab === 'expense' ? t.addExp : t.addInc}
         </button>

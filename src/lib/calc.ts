@@ -27,16 +27,16 @@ export function totalInterest(it: Item): number {
   return monthlyOf(it) * periods - it.amount;
 }
 
-/** 期初餘額 + items → 12 個月走勢 */
+/** 期初餘額 + items → 逐月走勢（長度等於 keys） */
 export function buildProjection(
   balance: number,
   items: Item[],
-  monthLabels: string[],
+  keys: string[],
 ): MonthProjection[] {
   const monthlyAmounts = items.map(monthlyOf);
 
   let running = balance;
-  return monthLabels.map((label, mi) => {
+  return keys.map((key, mi) => {
     let income = 0;
     let expense = 0;
     items.forEach((it, idx) => {
@@ -47,7 +47,7 @@ export function buildProjection(
     });
     running += income - expense;
     return {
-      month: label,
+      month: key,
       income: Math.round(income),
       expense: Math.round(expense),
       net: Math.round(income - expense),
@@ -59,31 +59,64 @@ export function buildProjection(
 const EN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**
- * "2026-09" → n 個月標籤，依語言格式化。
- * 超過一年時帶上西元年後兩碼，否則同月份名稱會重複而分不出年。
+ * "2026-09" + n → 逐月的 key，例如 ["2026-09", "2026-10", …]
+ * key 是語言無關的識別字，顯示交給下面的 fmt* 函式。
  */
-export function monthLabels(startDate: string, lang: 'zh' | 'en', months: number): string[] {
+export function monthKeys(startDate: string, months: number): string[] {
   const [y, m] = startDate.split('-').map(Number);
-  const withYear = months > 12;
   return Array.from({ length: months }, (_, i) => {
     const d = new Date(y, m - 1 + i, 1);
-    const yy = String(d.getFullYear()).slice(-2);
-    if (lang === 'zh') {
-      return withYear ? `${yy}/${String(d.getMonth() + 1).padStart(2, '0')}` : `${d.getMonth() + 1}月`;
-    }
-    return withYear ? `${EN_MONTHS[d.getMonth()]} ${yy}` : EN_MONTHS[d.getMonth()];
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 }
 
-/** "2026-09" + 12 → "2026/09 — 2027/08" / "Sep 2026 — Aug 2027" */
-export function rangeLabel(startDate: string, lang: 'zh' | 'en', months: number): string {
-  const [y, m] = startDate.split('-').map(Number);
-  const from = new Date(y, m - 1, 1);
-  const to = new Date(y, m - 2 + months, 1);
-  const en = EN_MONTHS;
-  const fmt = (d: Date) =>
-    lang === 'zh'
-      ? `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`
-      : `${en[d.getMonth()]} ${d.getFullYear()}`;
-  return `${fmt(from)} — ${fmt(to)}`;
+const parseKey = (key: string) => {
+  const [y, m] = key.split('-').map(Number);
+  return { y, mi: m - 1 };
+};
+
+/** "2026-09" → "9月" / "Sep" */
+export function fmtMonth(key: string, lang: 'zh' | 'en'): string {
+  const { mi } = parseKey(key);
+  return lang === 'zh' ? `${mi + 1}月` : EN_MONTHS[mi];
+}
+
+/** "2026-09" → "2026/09" / "Sep 2026" */
+export function fmtMonthYear(key: string, lang: 'zh' | 'en'): string {
+  const { y, mi } = parseKey(key);
+  return lang === 'zh'
+    ? `${y}/${String(mi + 1).padStart(2, '0')}`
+    : `${EN_MONTHS[mi]} ${y}`;
+}
+
+export const rangeLabel = (keys: string[], lang: 'zh' | 'en'): string =>
+  keys.length ? `${fmtMonthYear(keys[0], lang)} — ${fmtMonthYear(keys[keys.length - 1], lang)}` : '';
+
+/**
+ * 挑出 X 軸要標的月份：抽稀到最多 ~12 個刻度，並標記哪些刻度要另外顯示年份
+ * （每當年份跟前一個顯示的刻度不同時）。
+ */
+export function chartTicks(keys: string[]): { ticks: string[]; yearTicks: Set<string> } {
+  const step = Math.max(1, Math.ceil(keys.length / 12));
+  const ticks = keys.filter((_, i) => i % step === 0);
+
+  const yearTicks = new Set<string>();
+  let prevYear = '';
+  for (const k of ticks) {
+    const y = k.slice(0, 4);
+    if (y !== prevYear) yearTicks.add(k);
+    prevYear = y;
+  }
+  return { ticks, yearTicks };
+}
+
+/** 摘要數字：期末、最低點、期間總收支 */
+export function summarize(data: MonthProjection[]) {
+  const low = data.reduce((a, b) => (b.balance < a.balance ? b : a), data[0]);
+  return {
+    endBalance: data[data.length - 1]?.balance ?? 0,
+    low,
+    totalIncome: data.reduce((s, m) => s + m.income, 0),
+    totalExpense: data.reduce((s, m) => s + m.expense, 0),
+  };
 }

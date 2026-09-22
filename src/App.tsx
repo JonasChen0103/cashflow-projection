@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { LangContext, dicts } from './i18n';
-import { buildProjection, monthLabels, rangeLabel } from './lib/calc';
+import { buildProjection, monthKeys, rangeLabel } from './lib/calc';
 import { clampMonths, emptyState } from './lib/types';
 import type { AppState } from './lib/types';
 import { Header } from './components/Header';
 import { BalanceInput } from './components/BalanceInput';
 import { ItemEditor } from './components/ItemEditor/ItemEditor';
+import { Summary } from './components/Summary';
 import { ProjectionChart } from './components/ProjectionChart';
 import { ProjectionTable } from './components/ProjectionTable';
 
@@ -32,21 +33,18 @@ export default function App() {
     });
   };
 
-  const labels = useMemo(
-    () => monthLabels(state.startDate, state.lang, months),
-    [state.startDate, state.lang, months],
-  );
+  const keys = useMemo(() => monthKeys(state.startDate, months), [state.startDate, months]);
   const data = useMemo(
-    () => buildProjection(state.balance, state.items, labels),
-    [state.balance, state.items, labels],
+    () => buildProjection(state.balance, state.items, keys),
+    [state.balance, state.items, keys],
   );
 
   const t = dicts[state.lang];
 
   return (
     <LangContext.Provider value={{ lang: state.lang, t, setLang: (lang) => patch({ lang }) }}>
-      <main className="mx-auto flex max-w-[720px] flex-col gap-4 px-4 py-8">
-        <Header range={rangeLabel(state.startDate, state.lang, months)} />
+      <main className="mx-auto flex max-w-[760px] flex-col gap-5 px-4 py-8 sm:py-10">
+        <Header range={rangeLabel(keys, state.lang)} />
         <BalanceInput
           balance={state.balance}
           startDate={state.startDate}
@@ -55,14 +53,15 @@ export default function App() {
           onStartDate={(startDate) => patch({ startDate })}
           onMonths={setMonths}
         />
-        <ItemEditor items={state.items} labels={labels} onChange={(items) => patch({ items })} />
+        <ItemEditor items={state.items} keys={keys} onChange={(items) => patch({ items })} />
+        <Summary data={data} />
         <ProjectionChart data={data} />
         <ProjectionTable data={data} />
-        <footer className="flex items-center justify-between gap-4 pb-4 text-xs text-dim">
-          <p>{t.footer}</p>
+        <footer className="flex flex-col gap-3 pb-4 text-xs text-dim sm:flex-row sm:items-center sm:justify-between">
+          <p className="leading-relaxed">{t.footer}</p>
           <button
             onClick={() => confirm(t.resetConfirm) && setState(emptyState())}
-            className="shrink-0 rounded-lg border border-line px-2.5 py-1 hover:border-red hover:text-red"
+            className="shrink-0 self-start rounded-lg border border-line px-2.5 py-1 transition-colors hover:border-red hover:text-red sm:self-auto"
           >
             {t.reset}
           </button>
