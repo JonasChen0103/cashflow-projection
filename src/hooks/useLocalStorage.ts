@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-/** State mirrored to localStorage, debounced 500ms; unreadable data falls back to `initial`. */
-export function useLocalStorage<T>(key: string, initial: () => T, migrate: (v: T) => T = (v) => v) {
+/** State mirrored to localStorage; unreadable data falls back to `initial`. */
+export function useLocalStorage<T>(key: string, initial: () => T, migrate: (v: T) => T) {
   const [value, setValue] = useState<T>(() => {
     try {
       const raw = localStorage.getItem(key);
@@ -12,14 +12,11 @@ export function useLocalStorage<T>(key: string, initial: () => T, migrate: (v: T
   });
 
   useEffect(() => {
-    const id = setTimeout(() => {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch {
-        /* Private mode or quota exceeded: not worth interrupting the user over. */
-      }
-    }, 500);
-    return () => clearTimeout(id);
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      /* Private mode or quota exceeded: not worth interrupting the user over. */
+    }
   }, [key, value]);
 
   return [value, setValue] as const;

@@ -1,5 +1,5 @@
 import { monthKey } from './types';
-import type { Item, MonthProjection } from './types';
+import type { Item, Lang, MonthProjection } from './types';
 
 export const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 
@@ -31,7 +31,6 @@ export function calcPrincipal(monthly: number, apr: number, periods: number): nu
   return (monthly * (1 - Math.pow(1 + r, -periods))) / r;
 }
 
-/** Income carries no interest. */
 export const aprOf = (it: Item) => (it.type === 'income' ? 0 : it.apr);
 
 export const monthlyOf = (it: Item): number =>
@@ -89,17 +88,17 @@ const parseKey = (key: string) => {
 };
 
 /** "2026-09" -> "9月" / "Sep" */
-export function fmtMonth(key: string, lang: 'zh' | 'en'): string {
+export function fmtMonth(key: string, lang: Lang): string {
   return lang === 'zh' ? `${parseKey(key).mi + 1}月` : EN_MONTHS[parseKey(key).mi];
 }
 
 /** "2026-09" -> "2026/09" / "Sep 2026" */
-export function fmtMonthYear(key: string, lang: 'zh' | 'en'): string {
+export function fmtMonthYear(key: string, lang: Lang): string {
   const { y, mi } = parseKey(key);
   return lang === 'zh' ? `${y}/${String(mi + 1).padStart(2, '0')}` : `${EN_MONTHS[mi]} ${y}`;
 }
 
-export const rangeLabel = (keys: string[], lang: 'zh' | 'en'): string =>
+export const rangeLabel = (keys: string[], lang: Lang): string =>
   keys.length ? `${fmtMonthYear(keys[0], lang)} — ${fmtMonthYear(keys[keys.length - 1], lang)}` : '';
 
 /**
