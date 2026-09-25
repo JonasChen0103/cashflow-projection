@@ -12,20 +12,23 @@ function Tile({
   label: string;
   value: string;
   note?: string;
-  /** 收支的身分靠這顆小色點，數字本身維持中性色 */
   dot?: string;
   alert?: boolean;
 }) {
   return (
-    <div className="card px-4 py-3">
+    <div className="card min-w-0 px-4 py-3">
       <p className="flex items-center gap-1.5 text-xs text-muted">
         {dot && <span className={`inline-block size-1.5 rounded-full ${dot}`} />}
         {label}
       </p>
-      <p className={`mt-1.5 text-xl font-semibold ${alert ? 'text-red' : 'text-primary'}`}>
+      <p
+        className={`mt-1.5 text-xl font-semibold [overflow-wrap:anywhere] ${
+          alert ? 'text-red' : 'text-primary'
+        }`}
+      >
         {value}
       </p>
-      <p className="mt-0.5 h-4 text-[11px] text-dim">{note ?? ''}</p>
+      <p className="mt-0.5 h-4 truncate text-[11px] text-dim">{note ?? ''}</p>
     </div>
   );
 }

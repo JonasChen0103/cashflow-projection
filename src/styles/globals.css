@@ -1,103 +1,130 @@
 @import "tailwindcss";
 
-/*
- * 底色只由這五個變數決定，換配色改這裡就好。
- * 備選：暖墨 base #14121a / line #302a3d；藍墨 base #0b1220 / line #23304a
- */
+/* Every colour lives here; the light theme below just redefines the same names. */
 @theme {
-  --color-base: #090b12;
-  --color-card: #141827;
-  --color-input: #0e111d;
-  --color-hover: #1c2132;
-  --color-line: #242941;
+  --color-base: #0b0b0c;
+  --color-card: #161618;
+  --color-input: #101012;
+  --color-hover: #202024;
+  --color-line: #2c2c31;
 
-  --color-primary: #e8e9ed;
-  --color-secondary: #cdd0dc;
-  --color-muted: #8b8d97;
-  --color-dim: #5a5d6e;
-  --color-ghost: #3a3d4a;
+  --color-primary: #f3f2ea;
+  --color-secondary: #c9c8bd;
+  --color-muted: #8d8c82;
+  --color-dim: #5e5d56;
+  --color-ghost: #3c3b36;
 
-  --color-green: #4ecb71;
-  --color-red: #ff6b6b;
-  --color-blue: #4f8cff;
-  --color-amber: #ffb86c;
+  /* amber leans orange so it stays distinct from the yellow accent */
+  --color-accent: #fcee0a;
+  --color-blue: #007aff;
+  --color-green: #00ff9f;
+  --color-red: #ff1111;
+  --color-amber: #ff8a00;
+
+  --font-sans: "IBM Plex Sans", "LXGW WenKai TC", "PingFang TC", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "LXGW WenKai TC", monospace;
+  --font-display: "Archivo Black", "LXGW WenKai TC", sans-serif;
 }
 
-/*
- * 全部放進 @layer base：未分層的規則會蓋過 Tailwind 的 utilities，
- * 下面 select 的 padding / chevron 位置就沒辦法再用 class 個別覆寫。
- */
+:root {
+  --bg-glow: transparent;
+  --card-sheen: transparent;
+  --card-shadow: 0 0 0 transparent;
+  --chevron-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%238d8c82' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-base: #f2f1ea;
+  --color-card: #ffffff;
+  --color-input: #f8f7f1;
+  --color-hover: #e9e7db;
+  --color-line: #d5d2c3;
+
+  --color-primary: #14140f;
+  --color-secondary: #3d3c33;
+  --color-muted: #6b6a5e;
+  --color-dim: #8b8a7d;
+  --color-ghost: #b3b1a3;
+
+  /* neon washes out on white: same hues, darkened */
+  --color-accent: #8a7f00;
+  --color-blue: #0060d6;
+  --color-green: #00875a;
+  --color-red: #d10f0f;
+  --color-amber: #a85400;
+
+  --bg-glow: rgba(0, 122, 255, 0.09);
+  --card-sheen: rgba(255, 255, 255, 0.9);
+  --card-shadow: 0 10px 28px -20px rgba(20, 20, 15, 0.4);
+  --chevron-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%236b6a5e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* Unlayered rules outrank Tailwind utilities, which would make the select rules below unoverridable. */
 @layer base {
+  html {
+    color-scheme: dark;
+  }
 
-html {
-  color-scheme: dark;
-}
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -14%, var(--bg-glow), transparent 62%),
+      radial-gradient(720px 420px at 4% 6%, var(--bg-glow), transparent 60%),
+      radial-gradient(720px 440px at 97% 0%, var(--bg-glow), transparent 60%),
+      var(--color-base);
+    background-attachment: fixed;
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    letter-spacing: -0.005em;
+  }
 
-body {
-  /* 頂端一圈很淡的冷光，讓大片深色不至於死板；捲動時固定不跟著跑 */
-  background:
-    radial-gradient(1100px 620px at 50% -10%, rgba(79, 140, 255, 0.17), transparent 68%),
-    var(--color-base);
-  background-attachment: fixed;
-  color: var(--color-primary);
-  font-family: ui-sans-serif, system-ui, "Noto Sans TC", sans-serif;
-}
+  :focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: 2px;
+  }
 
-/* 鍵盤操作看得見焦點 */
-:focus-visible {
-  outline: 2px solid var(--color-blue);
-  outline-offset: 2px;
-}
+  input[type="number"],
+  .tabular-nums,
+  table {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
 
-/* 數字對齊 */
-input[type="number"],
-table {
-  font-variant-numeric: tabular-nums;
-}
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 
-/* 去掉 number input 的上下箭頭 */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-input[type="number"] {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 
-/* 原生 select 的系統箭頭在深色卡片上很突兀，換成自己畫的 chevron */
-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%238b8d97' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.6rem center;
-  background-size: 0.7rem;
-  padding-right: 1.85rem;
-}
+  select {
+    appearance: none;
+    background-image: var(--chevron-url);
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 0.7rem;
+    padding-right: 1.85rem;
+  }
 
-/* 展開的清單跟著卡片色走，而不是系統預設 */
-select option {
-  background-color: var(--color-card);
-  color: var(--color-primary);
-}
-
-/* type=month 的日曆圖示在深色下偏暗 */
-input[type="month"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.6);
-  cursor: pointer;
-}
-
+  select option {
+    background-color: var(--color-card);
+    color: var(--color-primary);
+  }
 }
 
 @layer components {
-  /* 每張卡片都是同一組邊框 + 內光 + 落影，別再一路複製 class 串 */
   .card {
     border-radius: 0.75rem;
     border: 1px solid var(--color-line);
     background-color: var(--color-card);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.035),
-      0 10px 30px -18px rgba(0, 0, 0, 0.9);
+      inset 0 1px 0 var(--card-sheen),
+      var(--card-shadow);
   }
 }

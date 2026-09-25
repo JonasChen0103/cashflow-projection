@@ -10,26 +10,23 @@ import {
   YAxis,
 } from 'recharts';
 import type { Lang, MonthProjection } from '../lib/types';
-import { chartTicks, fmt, fmtMonth, fmtMonthYear } from '../lib/calc';
+import { chartTicks, fmt, fmtMonth, fmtMonthYear, fmtShort } from '../lib/calc';
 import { useLang } from '../i18n';
 
-// SVG 屬性吃不到 Tailwind class，這幾個值要跟 globals.css 的 --color-* 對齊
-const BLUE = '#4f8cff';
-const RED = '#ff6b6b';
-const SURFACE = '#141827';
-const LINE = '#242941';
+// SVG attributes ignore Tailwind classes but do resolve var().
+const ACCENT = 'var(--color-accent)';
+const RED = 'var(--color-red)';
+const SURFACE = 'var(--color-card)';
+const LINE = 'var(--color-line)';
+const MUTED = 'var(--color-muted)';
+const DIM = 'var(--color-dim)';
 
-/** 結餘為負的月份標紅點；2px 底色描邊讓它在線上仍看得清 */
 function BalanceDot(props: { cx?: number; cy?: number; payload?: MonthProjection }) {
   const { cx, cy, payload } = props;
   if (cx == null || cy == null || !payload || payload.balance >= 0) return null;
   return <circle cx={cx} cy={cy} r={4} fill={RED} stroke={SURFACE} strokeWidth={2} />;
 }
 
-/**
- * 月份刻度：主行只寫月份，年份只在換年的刻度多寫一行，
- * 期間拉長時才不會每個刻度都拖著年份。
- */
 function MonthTick(props: {
   x?: number;
   y?: number;
@@ -41,11 +38,11 @@ function MonthTick(props: {
   if (!payload) return null;
   return (
     <g transform={`translate(${x},${y})`}>
-      <text y={14} textAnchor="middle" fill="#8b8d97" fontSize={12}>
+      <text y={14} textAnchor="middle" fill={MUTED} fontSize={12}>
         {fmtMonth(payload.value, lang)}
       </text>
       {yearTicks?.has(payload.value) && (
-        <text y={29} textAnchor="middle" fill="#5a5d6e" fontSize={10}>
+        <text y={29} textAnchor="middle" fill={DIM} fontSize={10}>
           {payload.value.slice(0, 4)}
         </text>
       )}
@@ -65,11 +62,11 @@ export function ProjectionChart({ data }: { data: MonthProjection[] }) {
       <h2 className="mb-4 text-sm font-medium text-secondary">{t.monthBal}</h2>
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 8, left: -8 }}>
+          <AreaChart data={data} margin={{ top: 4, right: 18, bottom: 8, left: -8 }}>
             <defs>
               <linearGradient id="balFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={BLUE} stopOpacity={0.28} />
-                <stop offset="100%" stopColor={BLUE} stopOpacity={0.02} />
+                <stop offset="0%" stopColor={ACCENT} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={ACCENT} stopOpacity={0.02} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke={LINE} vertical={false} />
@@ -83,36 +80,36 @@ export function ProjectionChart({ data }: { data: MonthProjection[] }) {
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: '#8b8d97', fontSize: 12 }}
+              tick={{ fill: MUTED, fontSize: 12 }}
               axisLine={false}
               tickLine={false}
               width={68}
-              tickFormatter={fmt}
+              tickFormatter={fmtShort}
             />
-            <ReferenceLine y={0} stroke="#5a5d6e" />
+            <ReferenceLine y={0} stroke={DIM} />
             <Tooltip
-              cursor={{ stroke: '#5a5d6e' }}
+              cursor={{ stroke: DIM }}
               contentStyle={{
                 background: SURFACE,
                 border: `1px solid ${LINE}`,
                 borderRadius: 10,
-                color: '#e8e9ed',
+                color: 'var(--color-primary)',
                 fontSize: 13,
               }}
-              labelStyle={{ color: '#8b8d97', marginBottom: 2 }}
+              labelStyle={{ color: MUTED, marginBottom: 2 }}
               labelFormatter={(k: string) => fmtMonthYear(k, lang)}
               formatter={(v: number) => [fmt(v), t.hBal]}
             />
             <Area
               type="monotone"
               dataKey="balance"
-              stroke={BLUE}
+              stroke={ACCENT}
               strokeWidth={2}
               strokeLinejoin="round"
               strokeLinecap="round"
               fill="url(#balFill)"
               dot={<BalanceDot />}
-              activeDot={{ r: 5, fill: BLUE, stroke: SURFACE, strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: ACCENT, stroke: SURFACE, strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 
-/** state + debounce 500ms 寫回 localStorage */
-export function useLocalStorage<T>(key: string, initial: () => T) {
+/** State mirrored to localStorage, debounced 500ms; unreadable data falls back to `initial`. */
+export function useLocalStorage<T>(key: string, initial: () => T, migrate: (v: T) => T = (v) => v) {
   const [value, setValue] = useState<T>(() => {
     try {
       const raw = localStorage.getItem(key);
-      return raw ? { ...initial(), ...JSON.parse(raw) } : initial();
+      return raw ? migrate({ ...initial(), ...JSON.parse(raw) }) : initial();
     } catch {
-      return initial(); // 壞資料或無 localStorage → 退回空白狀態
+      return initial();
     }
   });
 
@@ -16,7 +16,7 @@ export function useLocalStorage<T>(key: string, initial: () => T) {
       try {
         localStorage.setItem(key, JSON.stringify(value));
       } catch {
-        /* 隱私模式或超出配額：不影響使用 */
+        /* Private mode or quota exceeded: not worth interrupting the user over. */
       }
     }, 500);
     return () => clearTimeout(id);

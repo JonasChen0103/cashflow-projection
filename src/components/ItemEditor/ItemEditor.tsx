@@ -1,111 +1,27 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Item, ItemType } from '../../lib/types';
-import { fmtMonthYear } from '../../lib/calc';
+import { num, reorder } from '../../lib/calc';
 import { useLang } from '../../i18n';
-import { ExpenseRow } from './ExpenseRow';
-import { IncomeRow } from './IncomeRow';
+import { ItemRow, gridCls } from './ItemRow';
 
-export const inputCls =
-  'rounded-lg border border-line bg-input px-2.5 py-1.5 text-primary placeholder:text-ghost ' +
-  'outline-none transition-colors focus:border-blue focus:ring-1 focus:ring-blue/40';
-
-/**
- * 名稱 + 刪除：名稱當成這一列的標題，不要再包一層輸入框的邊，
- * hover / focus 才浮出底色；刪除鈕也拿掉方框。收支兩列共用。
- */
-export function RowHeader({
-  item,
-  onChange,
-  onRemove,
-}: {
-  item: Item;
-  onChange: (patch: Partial<Item>) => void;
-  onRemove: () => void;
-}) {
+function HeaderRow({ tab }: { tab: ItemType }) {
   const { t } = useLang();
+  const cls = 'px-2 text-[11px] font-medium text-dim';
   return (
-    <div className="flex items-center gap-1">
-      <input
-        value={item.name}
-        placeholder={t.namePh}
-        onChange={(e) => onChange({ name: e.target.value })}
-        className="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-[15px] font-medium text-primary outline-none transition-colors placeholder:font-normal placeholder:text-ghost hover:bg-hover focus:bg-hover"
-      />
-      <button
-        onClick={onRemove}
-        aria-label={t.remove}
-        title={t.remove}
-        className="shrink-0 rounded-md px-2 py-1 text-lg leading-none text-ghost transition-colors hover:bg-hover hover:text-red"
-      >
-        ×
-      </button>
+    <div className={`${gridCls[tab]} hidden items-end gap-2 pb-1`}>
+      <span />
+      <span className={cls}>{t.name}</span>
+      <span className={`${cls} text-right`}>{t.total}</span>
+      <span className={`${cls} text-right`}>{t.perMo}</span>
+      {tab === 'expense' && <span className={`${cls} text-right`}>{t.apr}</span>}
+      <span className={`${cls} text-center`}>{t.itemRange}</span>
+      <span />
     </div>
   );
 }
 
-/**
- * 起迄月份：兩個 select 併成一個帶框的區間控制項，
- * 中間用箭頭連起來，比兩個各自帶框的下拉好讀。
- */
-export function MonthRange({
-  item,
-  keys,
-  onChange,
-}: {
-  item: Item;
-  keys: string[];
-  onChange: (patch: Partial<Item>) => void;
-}) {
-  const { lang, t } = useLang();
-  const opts = useMemo(
-    () =>
-      keys.map((k, i) => (
-        <option key={k} value={i}>
-          {fmtMonthYear(k, lang)}
-        </option>
-      )),
-    [keys, lang],
-  );
-
-  // 兩個 chevron 併排會跟中間的箭頭打架，左邊那顆拿掉，整組只留右端一個
-  const base =
-    'min-w-0 flex-1 cursor-pointer rounded-md bg-transparent py-1.5 text-primary outline-none hover:bg-hover';
-  const startCls = `${base} bg-none px-2`;
-  const endCls = `${base} pl-2 pr-5 [background-position:right_0.35rem_center] [background-size:0.65rem]`;
-
-  return (
-    <div className="col-span-2 flex flex-col gap-1">
-      <span className="text-[11px] text-muted">{t.itemRange}</span>
-      <div className="flex items-center rounded-lg border border-line bg-input px-1 transition-colors focus-within:border-blue">
-        <select
-          aria-label={t.start}
-          value={item.startMonth}
-          onChange={(e) => {
-            const startMonth = Number(e.target.value);
-            onChange({ startMonth, endMonth: Math.max(startMonth, item.endMonth) });
-          }}
-          className={startCls}
-        >
-          {opts}
-        </select>
-        <span aria-hidden className="shrink-0 px-0.5 text-dim">
-          →
-        </span>
-        <select
-          aria-label={t.end}
-          value={item.endMonth}
-          onChange={(e) => {
-            const endMonth = Number(e.target.value);
-            onChange({ endMonth, startMonth: Math.min(endMonth, item.startMonth) });
-          }}
-          className={endCls}
-        >
-          {opts}
-        </select>
-      </div>
-    </div>
-  );
-}
+/** Distance from a scroll edge, in px, where dragging starts scrolling. */
+const EDGE = 56;
 
 interface Props {
   items: Item[];
@@ -114,11 +30,77 @@ interface Props {
 }
 
 export function ItemEditor({ items, keys, onChange }: Props) {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const [tab, setTab] = useState<ItemType>('expense');
+  const [scroll, setScroll] = useState(false);
+  const [rowsDraft, setRowsDraft] = useState('8');
+  const rows = Math.min(50, Math.max(1, num(rowsDraft)));
+  const list = useRef<HTMLDivElement>(null);
+  const [maxHeight, setMaxHeight] = useState<number>();
+  const [grab, setGrab] = useState<string>();
+  const [over, setOver] = useState<string>();
 
   const visible = items.filter((it) => it.type === tab);
-  const count = (k: ItemType) => items.filter((it) => it.type === k).length;
+
+  // ponytail: window height from the average row; rows that rewrap on resize
+  // re-measure on the next change, per-row measurement if that ever shows.
+  useLayoutEffect(() => {
+    const el = list.current;
+    if (el && visible.length) setMaxHeight((el.scrollHeight / visible.length) * rows);
+  }, [rows, visible.length, tab, lang]);
+
+  // Pointer events instead of HTML5 drag and drop: one path that also works on touch.
+  useEffect(() => {
+    if (!grab) return;
+    // Auto-scroll near the edges: the list when it scrolls, the page otherwise.
+    const box = list.current;
+    const inner = box && box.scrollHeight > box.clientHeight ? box : null;
+    const at = { x: 0, y: 0 };
+    let speed = 0;
+
+    const rowAt = () =>
+      (document.elementFromPoint(at.x, at.y) as HTMLElement | null)
+        ?.closest<HTMLElement>('[data-item]')?.dataset.item;
+
+    const move = (e: PointerEvent) => {
+      e.preventDefault();
+      at.x = e.clientX;
+      at.y = e.clientY;
+      const { top, bottom } = inner
+        ? inner.getBoundingClientRect()
+        : { top: 0, bottom: window.innerHeight };
+      const below = at.y - (bottom - EDGE);
+      const above = top + EDGE - at.y;
+      speed = below > 0 ? Math.min(14, below / 3) : above > 0 ? -Math.min(14, above / 3) : 0;
+      setOver(rowAt());
+    };
+
+    const tick = () => {
+      if (speed) {
+        (inner ?? window).scrollBy(0, speed);
+        setOver(rowAt());
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    let frame = requestAnimationFrame(tick);
+
+    const drop = () => {
+      const to = rowAt();
+      if (to) onChange(reorder(items, grab, to));
+      setGrab(undefined);
+      setOver(undefined);
+    };
+
+    document.addEventListener('pointermove', move, { passive: false });
+    document.addEventListener('pointerup', drop);
+    document.addEventListener('pointercancel', drop);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', drop);
+      document.removeEventListener('pointercancel', drop);
+    };
+  }, [grab, items, onChange]);
 
   const add = () =>
     onChange([
@@ -137,13 +119,12 @@ export function ItemEditor({ items, keys, onChange }: Props) {
   const patch = (id: string, p: Partial<Item>) =>
     onChange(items.map((it) => (it.id === id ? { ...it, ...p } : it)));
 
-  const remove = (id: string) => onChange(items.filter((it) => it.id !== id));
-
   return (
     <section className="card overflow-hidden">
       <div className="flex border-b border-line">
         {(['expense', 'income'] as ItemType[]).map((k) => {
           const on = tab === k;
+          const count = items.filter((it) => it.type === k).length;
           const accent = k === 'expense' ? 'text-red border-red' : 'text-green border-green';
           return (
             <button
@@ -155,36 +136,77 @@ export function ItemEditor({ items, keys, onChange }: Props) {
               }`}
             >
               {k === 'expense' ? t.expense : t.income}
-              {count(k) > 0 && <span className="ml-1.5 text-xs text-dim">{count(k)}</span>}
+              {count > 0 && <span className="ml-1.5 text-xs text-dim">{count}</span>}
             </button>
           );
         })}
+        {visible.length > 6 && (
+          <div className="flex shrink-0 items-center gap-1.5 pr-3 text-xs">
+            <button
+              onClick={() => setScroll((s) => !s)}
+              aria-pressed={scroll}
+              title={t.scrollHint}
+              className={`rounded border px-1.5 py-0.5 text-accent transition-colors ${
+                scroll ? 'border-accent bg-accent/15' : 'border-line hover:bg-hover'
+              }`}
+            >
+              {t.scroll}
+            </button>
+            {scroll && (
+              <>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={rowsDraft}
+                  onChange={(e) => setRowsDraft(e.target.value)}
+                  title={t.rowsHint}
+                  aria-label={t.rowsHint}
+                  className="w-9 rounded border border-line bg-input px-1 py-0.5 text-center text-primary outline-none focus:border-accent"
+                />
+                <span className="text-dim">{t.rowsUnit}</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col gap-3 p-4 sm:p-5">
-        {visible.length === 0 && <p className="py-6 text-center text-sm text-dim">{t.empty}</p>}
-        {visible.map((it) =>
-          it.type === 'expense' ? (
-            <ExpenseRow
-              key={it.id}
-              item={it}
-              keys={keys}
-              onChange={(p) => patch(it.id, p)}
-              onRemove={() => remove(it.id)}
-            />
-          ) : (
-            <IncomeRow
-              key={it.id}
-              item={it}
-              keys={keys}
-              onChange={(p) => patch(it.id, p)}
-              onRemove={() => remove(it.id)}
-            />
-          ),
+      <div className="p-3 sm:p-4">
+        {visible.length === 0 ? (
+          <p className="py-6 text-center text-sm text-dim">{t.empty}</p>
+        ) : (
+          <>
+            <HeaderRow tab={tab} />
+            <div
+              ref={list}
+              style={scroll ? { maxHeight } : undefined}
+              className={`divide-y divide-line/60 border-y border-line/60 ${
+                scroll ? 'overflow-auto' : ''
+              } ${grab ? 'select-none' : ''}`}
+            >
+              {visible.map((it) => (
+                <div
+                  key={it.id}
+                  data-item={it.id}
+                  className={
+                    grab === it.id ? 'opacity-40' : over === it.id ? 'bg-accent/[0.07]' : ''
+                  }
+                >
+                  <ItemRow
+                    item={it}
+                    keys={keys}
+                    onChange={(p) => patch(it.id, p)}
+                    onRemove={() => onChange(items.filter((x) => x.id !== it.id))}
+                    onGrab={() => setGrab(it.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         )}
         <button
           onClick={add}
-          className="rounded-lg border border-dashed border-line py-2.5 text-sm text-muted transition-colors hover:border-blue/60 hover:bg-hover hover:text-secondary"
+          className="mt-3 w-full rounded-lg border border-dashed border-line py-2 text-sm text-muted transition-colors hover:border-accent/60 hover:bg-hover hover:text-secondary"
         >
           {tab === 'expense' ? t.addExp : t.addInc}
         </button>
