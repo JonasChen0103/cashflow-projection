@@ -222,7 +222,8 @@ const v1 = parseState({
 assert.equal(v1.items[0].amount, 150000);
 assert.equal(v1.v, 2);
 
-// item ranges are clamped into the window, and a reversed range is straightened
+// a reversed range is straightened, and a range past the window survives it:
+// the window is a viewport, so shrinking it must not rewrite what was set up
 const clamped = parseState({
   months: 6,
   v: 2,
@@ -230,8 +231,15 @@ const clamped = parseState({
 });
 assert.deepEqual(
   [clamped.items[0].startMonth, clamped.items[0].endMonth, clamped.items[0].apr],
-  [5, 5, 0],
+  [99, 99, 0],
 );
+// still bounded, so a hand-edited file cannot ask for a million option rows
+const farOut = parseState({
+  months: 6,
+  v: 2,
+  items: [{ id: 'z', name: '', type: 'expense', amount: 1, apr: 0, startMonth: 0, endMonth: 1e9 }],
+});
+assert.equal(farOut.items[0].endMonth, 599);
 
 // an item with no id still gets one, so React keys and drag targets stay unique
 const noId = parseState({ v: 2, items: [{ type: 'income' }, { type: 'income' }] });

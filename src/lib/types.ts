@@ -115,7 +115,8 @@ export function parseState(raw: unknown): AppState {
   const s = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
   const months = clampMonths(numOr(s.months, base.months));
   const items = (Array.isArray(s.items) ? s.items : [])
-    .map((it) => parseItem(it, months - 1))
+    // Bounded by the cap, not by `months`: the window can shrink and grow back.
+    .map((it) => parseItem(it, MAX_MONTHS - 1))
     .filter((it): it is Item => it !== null);
 
   return {

@@ -32,18 +32,8 @@ export default function App() {
 
   const months = clampMonths(state.months);
 
-  /** Shortening the window pulls items back, or their range selects point at months that no longer exist. */
-  const setMonths = (n: number) => {
-    const m = clampMonths(n);
-    patch({
-      months: m,
-      items: state.items.map((it) => ({
-        ...it,
-        startMonth: Math.min(it.startMonth, m - 1),
-        endMonth: Math.min(it.endMonth, m - 1),
-      })),
-    });
-  };
+  /** The window is a viewport: item ranges outlive it, so a shorter window never rewrites them. */
+  const setMonths = (n: number) => patch({ months: clampMonths(n) });
 
   const now = thisMonth();
   const advance = () =>

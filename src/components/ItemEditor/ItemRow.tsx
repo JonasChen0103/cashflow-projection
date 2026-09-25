@@ -5,6 +5,7 @@ import {
   calcPrincipal,
   fmt,
   fmtMonthYear,
+  monthKeys,
   monthlyOf,
   num,
   totalInterest,
@@ -36,15 +37,15 @@ function MonthRange({
   onChange: (patch: Partial<Item>) => void;
 }) {
   const { lang, t } = useLang();
-  const opts = useMemo(
-    () =>
-      keys.map((k, i) => (
-        <option key={k} value={i}>
-          {fmtMonthYear(k, lang)}
-        </option>
-      )),
-    [keys, lang],
-  );
+  // An item can outlast the window; its own months still need options to select.
+  const opts = useMemo(() => {
+    const all = item.endMonth < keys.length ? keys : monthKeys(keys[0], item.endMonth + 1);
+    return all.map((k, i) => (
+      <option key={k} value={i}>
+        {fmtMonthYear(k, lang)}
+      </option>
+    ));
+  }, [keys, lang, item.endMonth]);
 
   const once = item.startMonth === item.endMonth;
   // Left select drops its chevron (bg-none): two of them clash with the arrow between.
