@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { LangContext, dicts } from './i18n';
 import { buildProjection, monthDiff, monthKeys, rangeLabel, reanchor } from './lib/calc';
-import { clampMonths, emptyState, thisMonth } from './lib/types';
+import { clampMonths, emptyState, parseState, thisMonth } from './lib/types';
 import type { AppState } from './lib/types';
 import { Header } from './components/Header';
 import { BalanceInput } from './components/BalanceInput';
@@ -13,22 +13,10 @@ import { ProjectionTable } from './components/ProjectionTable';
 
 const KEY = 'cashflow-state';
 
-/** v2: income `amount` means the total, not the per-month figure. */
-const migrate = (s: AppState): AppState =>
-  s.v === 2
-    ? s
-    : {
-        ...s,
-        v: 2,
-        items: s.items.map((it) =>
-          it.type === 'income'
-            ? { ...it, amount: it.amount * (it.endMonth - it.startMonth + 1) }
-            : it,
-        ),
-      };
+const footBtn = 'rounded-lg border border-line px-2.5 py-1 transition-colors';
 
 export default function App() {
-  const [state, setState] = useLocalStorage<AppState>(KEY, emptyState, migrate);
+  const [state, setState] = useLocalStorage(KEY, parseState);
   const patch = (p: Partial<AppState>) => setState((s) => ({ ...s, ...p }));
 
   useEffect(() => {
@@ -54,13 +42,36 @@ export default function App() {
   const advance = () =>
     patch({ startDate: now, items: reanchor(state.items, state.startDate, now) });
 
+  const t = dicts[state.lang];
+  const picker = useRef<HTMLInputElement>(null);
+
+  const save = () => {
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }),
+    );
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cashflow-${now}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const load = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = ''; // so picking the same file twice still fires onChange
+    if (!f || !confirm(t.importConfirm)) return;
+    try {
+      setState(parseState(JSON.parse(await f.text())));
+    } catch {
+      alert(t.importFailed);
+    }
+  };
+
   const keys = useMemo(() => monthKeys(state.startDate, months), [state.startDate, months]);
   const data = useMemo(
     () => buildProjection(state.balance, state.items, keys),
     [state.balance, state.items, keys],
   );
-
-  const t = dicts[state.lang];
 
   return (
     <LangContext.Provider value={{ lang: state.lang, t, setLang: (lang) => patch({ lang }) }}>
@@ -88,12 +99,30 @@ export default function App() {
         <ProjectionTable data={data} />
         <footer className="flex flex-col gap-3 pb-4 text-xs text-dim sm:flex-row sm:items-center sm:justify-between">
           <p className="leading-relaxed">{t.footer}</p>
-          <button
-            onClick={() => confirm(t.resetConfirm) && setState(emptyState())}
-            className="shrink-0 self-start rounded-lg border border-line px-2.5 py-1 transition-colors hover:border-red hover:text-red sm:self-auto"
-          >
-            {t.reset}
-          </button>
+          <div className="flex shrink-0 gap-2 self-start sm:self-auto">
+            <button onClick={save} className={`${footBtn} hover:border-accent hover:text-accent`}>
+              {t.export}
+            </button>
+            <button
+              onClick={() => picker.current?.click()}
+              className={`${footBtn} hover:border-accent hover:text-accent`}
+            >
+              {t.import}
+            </button>
+            <button
+              onClick={() => confirm(t.resetConfirm) && setState(emptyState())}
+              className={`${footBtn} hover:border-red hover:text-red`}
+            >
+              {t.reset}
+            </button>
+            <input
+              ref={picker}
+              type="file"
+              accept="application/json,.json"
+              onChange={load}
+              className="hidden"
+            />
+          </div>
         </footer>
       </main>
     </LangContext.Provider>

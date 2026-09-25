@@ -61,3 +61,57 @@ export function emptyState(): AppState {
     v: 2,
   };
 }
+
+const isMonthKey = (v: unknown): v is string =>
+  typeof v === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(v);
+
+const numOr = (v: unknown, fallback: number) =>
+  typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+
+function parseItem(v: unknown, lastMonth: number): Item | null {
+  if (!v || typeof v !== 'object') return null;
+  const it = v as Record<string, unknown>;
+  if (it.type !== 'income' && it.type !== 'expense') return null;
+  const startMonth = Math.min(lastMonth, Math.max(0, Math.round(numOr(it.startMonth, 0))));
+  return {
+    id: typeof it.id === 'string' && it.id ? it.id : crypto.randomUUID(),
+    name: typeof it.name === 'string' ? it.name : '',
+    type: it.type,
+    amount: numOr(it.amount, 0),
+    apr: Math.max(0, numOr(it.apr, 0)),
+    startMonth,
+    endMonth: Math.min(lastMonth, Math.max(startMonth, Math.round(numOr(it.endMonth, startMonth)))),
+  };
+}
+
+/**
+ * Anything in — stored JSON, an imported file, null — a usable state out. Every
+ * field is checked and falls back to a default rather than throwing, so a
+ * truncated or hand-edited file cannot leave the app rendering NaN. v1 data,
+ * where income `amount` was a per-month figure, is migrated on the way in.
+ */
+export function parseState(raw: unknown): AppState {
+  const base = emptyState();
+  const s = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const months = clampMonths(numOr(s.months, base.months));
+  const items = (Array.isArray(s.items) ? s.items : [])
+    .map((it) => parseItem(it, months - 1))
+    .filter((it): it is Item => it !== null);
+
+  return {
+    balance: numOr(s.balance, base.balance),
+    items:
+      numOr(s.v, 1) >= 2
+        ? items
+        : items.map((it) =>
+            it.type === 'income'
+              ? { ...it, amount: it.amount * (it.endMonth - it.startMonth + 1) }
+              : it,
+          ),
+    lang: s.lang === 'en' || s.lang === 'zh' ? s.lang : base.lang,
+    theme: s.theme === 'light' || s.theme === 'dark' ? s.theme : base.theme,
+    startDate: isMonthKey(s.startDate) ? s.startDate : base.startDate,
+    months,
+    v: 2,
+  };
+}

@@ -2,7 +2,7 @@
 
 Plan your money month by month. Enter your balance, add your income and
 installments, and see where the line goes — for the next year, or the next
-forty.
+thirty.
 
 **[English](#english) · [繁體中文](#繁體中文)**
 
@@ -35,6 +35,8 @@ leaves your device.
   the edges
 - **Traditional Chinese / English**, and **dark / light** themes
 - **Local-only storage** — no backend, no accounts, no analytics, no cookies
+- **Export and import** — save everything to a JSON file and load it back on
+  another browser or device
 
 ### Getting started
 
@@ -110,10 +112,21 @@ never stored.
   than breaking the page.
 - **It is tiny.** Fifty items with full Chinese names come to roughly 8 KB —
   about 0.2% of the ~5 MB a browser gives each site, phones included.
-- **It is per-browser.** Switching browser, device or profile means starting
-  fresh. Clearing site data, or using a private window and closing it, removes
-  it. There is no export or import yet, and no sync.
+- **It is per-browser.** There is no sync. Switching browser, device or profile
+  means starting fresh unless you carry a file across. Clearing site data, or
+  using a private window and closing it, removes it.
 - **It never leaves your device.** The app makes no network requests of its own.
+
+**Back it up.** `Export` in the footer writes the whole state to
+`cashflow-YYYY-MM.json`; `Import` reads one back, replacing what is saved after
+a confirmation. Every field is re-validated on the way in, so a truncated or
+hand-edited file falls back to defaults instead of corrupting the app, and files
+written by older versions are migrated.
+
+This matters more than it looks on iOS. Safari deletes all script-writable
+storage — localStorage included — for sites you have not visited in seven days.
+A tool you open once a month is squarely in range. Adding the site to your home
+screen avoids it; so does keeping an exported file.
 
 `Clear all` in the footer wipes the key and starts over.
 
@@ -176,7 +189,7 @@ MIT — see [LICENSE](LICENSE).
 
 ## 繁體中文
 
-### 為什麼做這個
+### 創作緣由
 
 大部分記帳 App 都在請你把「過去」分類。這個工具只關心未來：你現在有多少、
 之後會進來多少、會出去多少，以及結餘會不會在某個月掉到負的再爬回來。
@@ -193,6 +206,7 @@ MIT — see [LICENSE](LICENSE).
 - **拖曳排序** —— 滑鼠和觸控都可以，拖到邊緣會自動捲動
 - **繁體中文／English**，以及**深色／淺色**佈景
 - **純本機儲存** —— 沒有後端、沒有帳號、沒有分析追蹤、沒有 cookie
+- **匯出與匯入** —— 把所有資料存成 JSON 檔，在別的瀏覽器或裝置讀回來
 
 ### 開始使用
 
@@ -259,9 +273,17 @@ HTTP header，建議另外在 header 加上 `frame-ancestors 'none'` 和 HSTS �
   會退回空白狀態，而不是讓頁面壞掉。
 - **非常小。** 五十筆帶完整中文名稱的項目大約只有 8 KB —— 約佔瀏覽器給每個網站
   的 5 MB 空間的 0.2%，手機上也一樣。
-- **綁在單一瀏覽器。** 換瀏覽器、換裝置、換 profile 都要重新輸入。清除網站資料，
-  或用無痕視窗然後關掉，資料就沒了。目前沒有匯出／匯入，也沒有同步。
+- **綁在單一瀏覽器。** 沒有同步功能。換瀏覽器、換裝置、換 profile 都要重新輸入，
+  除非你自己帶一個檔案過去。清除網站資料，或用無痕視窗然後關掉，資料就沒了。
 - **不會離開你的裝置。** 這個 App 本身不發出任何網路請求。
+
+**記得備份。** 頁尾的 `匯出` 會把完整狀態寫成 `cashflow-YYYY-MM.json`；`匯入`
+則是讀回來，確認之後覆蓋目前的資料。每個欄位在讀入時都會重新驗證，所以檔案被截斷
+或手動改壞時只會退回預設值，不會讓程式壞掉，舊版本寫出的檔案也會自動轉換。
+
+這件事在 iOS 上特別重要：Safari 會把你**連續七天沒有造訪**的網站的所有
+script 可寫入儲存空間刪掉，localStorage 也在內。一個月才開一次的工具正好踩在
+這個規則上。把網站加到主畫面可以避開，平常留一份匯出的檔案也可以。
 
 頁尾的 `清除全部` 會刪掉這個 key，一切重來。
 

@@ -17,7 +17,7 @@ import {
   reorder,
   summarize,
 } from './calc.ts';
-import { clampMonths } from './types.ts';
+import { clampMonths, parseState } from './types.ts';
 import type { Item } from './types.ts';
 
 assert.equal(calcMonthly(12000, 0, 12), 1000);
@@ -173,5 +173,68 @@ assert.equal(clampMonths(NaN), 12);
 assert.equal(clampMonths(-5), 1);
 assert.equal(clampMonths(9999), 480);
 assert.equal(clampMonths(18.6), 19);
+
+// parseState: anything in, a usable state out — never a throw, never a NaN
+for (const junk of [null, undefined, 'nonsense', 42, [], { items: 'not-an-array' }]) {
+  const st = parseState(junk);
+  assert.equal(st.months, 12, `months for ${JSON.stringify(junk)}`);
+  assert.deepEqual(st.items, []);
+  assert.equal(st.balance, 0);
+}
+
+const junked = parseState({
+  balance: 'x',
+  months: 9999,
+  lang: 'fr',
+  theme: 'neon',
+  startDate: '2026-13',
+  items: [null, 'nope', { type: 'mystery' }, { type: 'expense', amount: 'NaN' }],
+});
+assert.equal(junked.balance, 0);
+assert.equal(junked.months, 480);
+assert.equal(junked.lang, 'zh');
+assert.equal(junked.theme, 'dark');
+assert.ok(/^\d{4}-(0[1-9]|1[0-2])$/.test(junked.startDate), junked.startDate);
+// only the one entry with a real type survives, and its junk amount becomes 0
+assert.equal(junked.items.length, 1);
+assert.equal(junked.items[0].amount, 0);
+
+// a well-formed v2 file round-trips untouched
+const saved = {
+  balance: 5000,
+  items: [
+    { id: 'a', name: 'rent', type: 'expense', amount: 24000, apr: 1.5, startMonth: 0, endMonth: 11 },
+  ],
+  lang: 'en',
+  theme: 'light',
+  startDate: '2027-03',
+  months: 24,
+  v: 2,
+};
+assert.deepEqual(parseState(saved), saved);
+assert.deepEqual(parseState(JSON.parse(JSON.stringify(saved))), saved);
+
+// v1 stored income as a per-month figure; it is migrated to a total
+const v1 = parseState({
+  months: 12,
+  items: [{ id: 'i', name: 'pay', type: 'income', amount: 50000, apr: 0, startMonth: 0, endMonth: 2 }],
+});
+assert.equal(v1.items[0].amount, 150000);
+assert.equal(v1.v, 2);
+
+// item ranges are clamped into the window, and a reversed range is straightened
+const clamped = parseState({
+  months: 6,
+  v: 2,
+  items: [{ id: 'z', name: '', type: 'expense', amount: 1, apr: -5, startMonth: 99, endMonth: 3 }],
+});
+assert.deepEqual(
+  [clamped.items[0].startMonth, clamped.items[0].endMonth, clamped.items[0].apr],
+  [5, 5, 0],
+);
+
+// an item with no id still gets one, so React keys and drag targets stay unique
+const noId = parseState({ v: 2, items: [{ type: 'income' }, { type: 'income' }] });
+assert.equal(new Set(noId.items.map((it) => it.id)).size, 2);
 
 console.log('ok');

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 
-/** State mirrored to localStorage; unreadable data falls back to `initial`. */
-export function useLocalStorage<T>(key: string, initial: () => T, migrate: (v: T) => T) {
+/** State mirrored to localStorage; `parse` turns whatever is stored — or nothing — into a usable value. */
+export function useLocalStorage<T>(key: string, parse: (raw: unknown) => T) {
   const [value, setValue] = useState<T>(() => {
     try {
       const raw = localStorage.getItem(key);
-      return raw ? migrate({ ...initial(), ...JSON.parse(raw) }) : initial();
+      return parse(raw === null ? null : JSON.parse(raw));
     } catch {
-      return initial();
+      return parse(null);
     }
   });
 
