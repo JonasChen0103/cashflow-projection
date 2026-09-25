@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { LangContext, dicts } from './i18n';
 import { buildProjection, monthDiff, monthKeys, rangeLabel, reanchor } from './lib/calc';
-import { clampMonths, emptyState, parseState, thisMonth } from './lib/types';
+import {
+  MAX_IMPORT_BYTES,
+  MAX_ITEMS,
+  clampMonths,
+  emptyState,
+  parseState,
+  thisMonth,
+} from './lib/types';
 import type { AppState } from './lib/types';
 import { Header } from './components/Header';
 import { BalanceInput } from './components/BalanceInput';
@@ -61,7 +68,14 @@ export default function App() {
     e.target.value = ''; // so picking the same file twice still fires onChange
     if (!f || !confirm(t.importConfirm)) return;
     try {
-      setState(parseState(JSON.parse(await f.text())));
+      // Rejected, not truncated: a refused file costs nothing, a silently
+      // trimmed one looks like it imported and is missing rows.
+      if (f.size > MAX_IMPORT_BYTES) throw new Error('file too large');
+      const raw = JSON.parse(await f.text());
+      if (Array.isArray(raw?.items) && raw.items.length > MAX_ITEMS) {
+        throw new Error('too many items');
+      }
+      setState(parseState(raw));
     } catch {
       alert(t.importFailed);
     }

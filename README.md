@@ -2,7 +2,7 @@
 
 Plan your money month by month. Enter your balance, add your income and
 installments, and see where the line goes — for the next year, or the next
-thirty.
+fifty.
 
 **[English](#english) · [繁體中文](#繁體中文)**
 
@@ -25,7 +25,7 @@ leaves your device.
 
 - **Month-by-month projection** — an interactive balance chart plus a full
   monthly breakdown table
-- **Any window from 1 to 480 months** — set a start month and either an end
+- **Any window from 1 to 600 months** — set a start month and either an end
   month or a number of months; the other follows
 - **Installments with APR** — standard amortization (PMT), so a 24-month loan
   at 3.75% shows the real monthly payment and the total interest
@@ -133,7 +133,12 @@ screen avoids it; so does keeping an exported file.
 ### Privacy and security
 
 - No backend, no accounts, no cookies, no analytics, no telemetry
-- No `eval`, no `innerHTML`, no user content rendered as markup
+- No `eval`, no `innerHTML`, no user content rendered as markup. An item name
+  only ever reaches an `<input value>`, so a script payload in a file is inert
+- An imported file is treated as hostile input: it is refused above 2 MB or
+  1,000 items, every field is validated and clamped to a range the maths cannot
+  overflow, and keys are read one by one into a fresh object, so a `__proto__`
+  in the JSON does nothing
 - The production build ships a strict Content Security Policy: scripts may only
   load from the site's own origin
 - The two pinned jsDelivr font stylesheets carry Subresource Integrity hashes.
@@ -199,7 +204,7 @@ MIT — see [LICENSE](LICENSE).
 ### 功能
 
 - **逐月預測** —— 互動式結餘走勢圖，加上完整的逐月明細表
-- **1 到 480 個月的任意區間** —— 設好起始月份，再給結束月份或月數，另一個會自動跟上
+- **1 到 600 個月的任意區間** —— 設好起始月份，再給結束月份或月數，另一個會自動跟上
 - **含利率的分期** —— 標準攤還公式（PMT），所以 24 期、年利率 3.75% 會算出真正的月繳金額與總利息
 - **總額 ⇄ 月付** —— 你知道哪個就填哪個，另一個自動換算
 - **一次性金額** —— 用 `1×` 開關把任何項目縮成單一月份
@@ -290,7 +295,11 @@ script 可寫入儲存空間刪掉，localStorage 也在內。一個月才開一
 ### 隱私與安全
 
 - 沒有後端、沒有帳號、沒有 cookie、沒有分析追蹤、沒有遙測
-- 沒有 `eval`、沒有 `innerHTML`，使用者輸入的內容不會被當成標記語言渲染
+- 沒有 `eval`、沒有 `innerHTML`，使用者輸入的內容不會被當成標記語言渲染。項目名稱
+  只會進到 `<input value>`，所以檔案裡夾帶的指令碼不會被執行
+- 匯入的檔案一律當成惡意輸入處理：超過 2 MB 或 1,000 筆項目直接拒絕，每個欄位都
+  經過驗證並夾在計算不會溢位的範圍內，而且是逐一讀取欄位組成全新物件，所以 JSON
+  裡的 `__proto__` 不會有任何作用
 - 正式版建置帶有嚴格的 Content Security Policy：指令碼只能從網站自己的來源載入
 - 兩支釘選版本的 jsDelivr 字型樣式表都帶有 Subresource Integrity 雜湊。Google
   Fonts 無法使用 SRI，因為它的 CSS 會依瀏覽器而異 —— 如果想徹底移除這個外部

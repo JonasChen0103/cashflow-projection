@@ -171,7 +171,7 @@ assert.equal(s.low.month, '2026-09');
 assert.equal(clampMonths(0), 12);
 assert.equal(clampMonths(NaN), 12);
 assert.equal(clampMonths(-5), 1);
-assert.equal(clampMonths(9999), 480);
+assert.equal(clampMonths(9999), 600);
 assert.equal(clampMonths(18.6), 19);
 
 // parseState: anything in, a usable state out — never a throw, never a NaN
@@ -191,7 +191,7 @@ const junked = parseState({
   items: [null, 'nope', { type: 'mystery' }, { type: 'expense', amount: 'NaN' }],
 });
 assert.equal(junked.balance, 0);
-assert.equal(junked.months, 480);
+assert.equal(junked.months, 600);
 assert.equal(junked.lang, 'zh');
 assert.equal(junked.theme, 'dark');
 assert.ok(/^\d{4}-(0[1-9]|1[0-2])$/.test(junked.startDate), junked.startDate);
@@ -236,5 +236,50 @@ assert.deepEqual(
 // an item with no id still gets one, so React keys and drag targets stay unique
 const noId = parseState({ v: 2, items: [{ type: 'income' }, { type: 'income' }] });
 assert.equal(new Set(noId.items.map((it) => it.id)).size, 2);
+
+// a __proto__ key in imported JSON is inert: parseState reads named keys and
+// returns a fresh literal, it never spreads the untrusted object
+parseState(
+  JSON.parse(
+    '{"__proto__":{"pwned":1},"v":2,"items":[{"type":"expense","__proto__":{"pwned":1}}]}',
+  ),
+);
+assert.equal(({} as Record<string, unknown>).pwned, undefined);
+assert.equal(([] as unknown as Record<string, unknown>).pwned, undefined);
+
+// absurd rates used to overflow the amortization formula into NaN
+for (const apr of [1e6, 1e308, -5]) {
+  const st = parseState({
+    v: 2,
+    months: 600,
+    items: [{ id: 'x', name: '', type: 'expense', amount: 1000, apr, startMonth: 0, endMonth: 599 }],
+  });
+  const proj = buildProjection(0, st.items, monthKeys('2026-09', 600));
+  assert.ok(Number.isFinite(monthlyOf(st.items[0])), `monthly finite for apr=${apr}`);
+  assert.ok(Number.isFinite(proj[599].balance), `balance finite for apr=${apr}`);
+}
+
+// and absurd amounts are clamped rather than carried to Infinity
+const huge = parseState({
+  v: 2,
+  months: 600,
+  balance: 1e308,
+  items: [{ id: 'y', name: 'z'.repeat(5000), type: 'income', amount: 1e308, apr: 0, startMonth: 0, endMonth: 599 }],
+});
+assert.ok(Number.isFinite(huge.balance) && Math.abs(huge.balance) <= 1e12);
+assert.ok(Math.abs(huge.items[0].amount) <= 1e12);
+assert.equal(huge.items[0].name.length, 200);
+assert.ok(
+  buildProjection(huge.balance, huge.items, monthKeys('2026-09', 600)).every((m) =>
+    Number.isFinite(m.balance),
+  ),
+);
+
+// the v1 migration multiplies by the period count, so it clamps too
+const v1Huge = parseState({
+  months: 600,
+  items: [{ id: 'q', name: '', type: 'income', amount: 1e12, apr: 0, startMonth: 0, endMonth: 599 }],
+});
+assert.ok(Math.abs(v1Huge.items[0].amount) <= 1e12);
 
 console.log('ok');
