@@ -2,6 +2,14 @@
   "name": "cashflow-projection",
   "private": true,
   "version": "0.1.0",
+  "description": "Browser-only monthly cash flow projection with APR amortization. No backend, no accounts.",
+  "license": "MIT",
+  "author": "Jonas Chen",
+  "homepage": "https://cashflow.jonasblue.me",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JonasChen0103/cashflow-projection.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
