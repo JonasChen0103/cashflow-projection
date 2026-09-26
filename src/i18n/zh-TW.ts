@@ -18,6 +18,7 @@ export default {
   perMo: '月付',
   apr: '年利率',
   itemRange: '期間',
+  itemMonths: '期數',
   start: '起始',
   end: '結束',
   once: '一次性（單月）',

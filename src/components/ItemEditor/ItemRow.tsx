@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { MAX_MONTHS } from '../../lib/types';
 import type { Item, ItemType } from '../../lib/types';
 import {
   aprOf,
@@ -14,8 +15,8 @@ import { useLang } from '../../i18n';
 
 /** Shared with HeaderRow so columns line up; narrow screens fall back to wrapping flex. */
 export const gridCls: Record<ItemType, string> = {
-  expense: 'sm:grid sm:grid-cols-[1rem_minmax(0,1fr)_5.25rem_5.25rem_4rem_13rem_1.5rem]',
-  income: 'sm:grid sm:grid-cols-[1rem_minmax(0,1fr)_5.25rem_5.25rem_13rem_1.5rem]',
+  expense: 'sm:grid sm:grid-cols-[1rem_minmax(0,1fr)_5.25rem_5.25rem_4rem_15rem_1.5rem]',
+  income: 'sm:grid sm:grid-cols-[1rem_minmax(0,1fr)_5.25rem_5.25rem_15rem_1.5rem]',
 };
 
 const cellBase =
@@ -26,6 +27,33 @@ const cellBase =
 const textCellCls = `w-full ${cellBase}`;
 const numCellCls = `w-[5.25rem] text-right tabular-nums sm:w-full ${cellBase}`;
 const aprCellCls = `w-16 text-right tabular-nums sm:w-full ${cellBase}`;
+
+/** Sets the range by length instead of by end month; the two are the same knob. */
+function MonthCount({ periods, onChange }: { periods: number; onChange: (n: number) => void }) {
+  const { t } = useLang();
+  // Raw string while typing, so a half-typed number does not snap the range.
+  const [draft, setDraft] = useState(String(periods));
+  useEffect(() => setDraft(String(periods)), [periods]);
+
+  return (
+    <input
+      type="number"
+      min={1}
+      max={MAX_MONTHS}
+      step={1}
+      value={draft}
+      title={t.itemMonths}
+      aria-label={t.itemMonths}
+      onChange={(e) => {
+        setDraft(e.target.value);
+        const n = num(e.target.value);
+        if (n >= 1 && n <= MAX_MONTHS) onChange(n);
+      }}
+      onBlur={() => setDraft(String(periods))}
+      className="w-9 shrink-0 rounded border border-line/60 bg-transparent px-1 py-0.5 text-right text-[12px] tabular-nums text-secondary outline-none hover:border-line focus:border-accent focus:text-primary"
+    />
+  );
+}
 
 function MonthRange({
   item,
@@ -84,6 +112,12 @@ function MonthRange({
           >
             {opts}
           </select>
+          <MonthCount
+            periods={item.endMonth - item.startMonth + 1}
+            onChange={(n) =>
+              onChange({ endMonth: Math.min(item.startMonth + n - 1, MAX_MONTHS - 1) })
+            }
+          />
         </>
       )}
       <button

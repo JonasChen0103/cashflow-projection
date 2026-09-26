@@ -20,6 +20,7 @@ const en: typeof zh = {
   perMo: 'Monthly',
   apr: 'APR%',
   itemRange: 'Range',
+  itemMonths: 'Periods',
   start: 'From',
   end: 'To',
   once: 'One-time (single month)',
