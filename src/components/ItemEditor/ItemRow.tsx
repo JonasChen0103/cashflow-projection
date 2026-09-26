@@ -15,8 +15,8 @@ import { useLang } from '../../i18n';
 
 /** Shared with HeaderRow so columns line up; narrow screens fall back to wrapping flex. */
 export const gridCls: Record<ItemType, string> = {
-  expense: 'sm:grid sm:grid-cols-[1rem_minmax(0,1fr)_5.25rem_5.25rem_4rem_15rem_1.5rem]',
-  income: 'sm:grid sm:grid-cols-[1rem_minmax(0,1fr)_5.25rem_5.25rem_15rem_1.5rem]',
+  expense: 'sm:grid sm:grid-cols-[1rem_minmax(0,1fr)_5.25rem_5.25rem_2.75rem_4rem_15rem_1.5rem]',
+  income: 'sm:grid sm:grid-cols-[1rem_minmax(0,1fr)_5.25rem_5.25rem_2.75rem_15rem_1.5rem]',
 };
 
 const cellBase =
@@ -194,6 +194,18 @@ export function ItemRow({ item, keys, onChange, onRemove, onGrab }: Props) {
         }
         className={numCellCls}
       />
+      <button
+        onClick={() => onChange({ lockMonthly: !item.lockMonthly })}
+        aria-label={`${t.lockCol}: ${item.lockMonthly ? t.perMo : t.total}`}
+        title={t.lockHint}
+        className={`shrink-0 rounded border px-1 py-0.5 text-[11px] font-medium transition-colors ${
+          item.lockMonthly
+            ? 'border-accent/50 bg-accent/15 text-accent'
+            : 'border-line/60 text-dim hover:bg-hover hover:text-secondary'
+        }`}
+      >
+        {item.lockMonthly ? t.lockMo : t.lockTot}
+      </button>
       {item.type === 'expense' && (
         <input
           type="number"

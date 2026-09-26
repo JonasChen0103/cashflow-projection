@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  applyEdit,
   buildProjection,
   calcMonthly,
   calcPrincipal,
@@ -203,7 +204,16 @@ assert.equal(junked.items[0].amount, 0);
 const saved = {
   balance: 5000,
   items: [
-    { id: 'a', name: 'rent', type: 'expense', amount: 24000, apr: 1.5, startMonth: 0, endMonth: 11 },
+    {
+      id: 'a',
+      name: 'rent',
+      type: 'expense',
+      amount: 24000,
+      apr: 1.5,
+      startMonth: 0,
+      endMonth: 11,
+      lockMonthly: false,
+    },
   ],
   lang: 'en',
   theme: 'light',
@@ -221,6 +231,35 @@ const v1 = parseState({
 });
 assert.equal(v1.items[0].amount, 150000);
 assert.equal(v1.v, 2);
+
+// resizing a range: the total holds, or the monthly does on a locked item
+const twelve: Item = {
+  id: 'r',
+  name: 'installment',
+  type: 'expense',
+  amount: 24000,
+  apr: 0,
+  startMonth: 0,
+  endMonth: 11,
+};
+const rent: Item = { ...twelve, name: 'rent', lockMonthly: true };
+assert.equal(monthlyOf(twelve), 2000);
+assert.equal(applyEdit(twelve, { endMonth: 5 }).amount, 24000);
+assert.equal(monthlyOf(applyEdit(twelve, { endMonth: 5 })), 4000);
+assert.equal(applyEdit(rent, { endMonth: 5 }).amount, 12000);
+assert.equal(monthlyOf(applyEdit(rent, { endMonth: 5 })), 2000);
+// the lock is per item, so its neighbour's setting cannot bleed in
+assert.equal(applyEdit({ ...rent, lockMonthly: false }, { endMonth: 5 }).amount, 24000);
+// with APR the monthly is held through the amortization, not by dividing
+const withApr: Item = { ...rent, apr: 12 };
+assert.ok(Math.abs(monthlyOf(applyEdit(withApr, { endMonth: 23 })) - monthlyOf(withApr)) < 1);
+// an edit that leaves the length alone never touches the amount, locked or not
+assert.equal(applyEdit(rent, { startMonth: 6, endMonth: 17 }).amount, 24000);
+assert.equal(applyEdit(rent, { apr: 5 }).amount, 24000);
+// the flag survives a round trip through storage, and junk in that slot does not
+assert.equal(parseState({ v: 2, items: [rent] }).items[0].lockMonthly, true);
+const junkLock = parseState({ v: 2, items: [{ ...rent, lockMonthly: 'yes' }] });
+assert.equal(junkLock.items[0].lockMonthly, false);
 
 // a reversed range is straightened, and a range past the window survives it:
 // the window is a viewport, so shrinking it must not rewrite what was set up

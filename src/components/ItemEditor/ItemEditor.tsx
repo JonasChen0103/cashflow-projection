@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Item, ItemType } from '../../lib/types';
-import { num, reorder } from '../../lib/calc';
+import { applyEdit, num, reorder } from '../../lib/calc';
 import { useLang } from '../../i18n';
 import { ItemRow, gridCls } from './ItemRow';
 
@@ -13,6 +13,7 @@ function HeaderRow({ tab }: { tab: ItemType }) {
       <span className={cls}>{t.name}</span>
       <span className={`${cls} text-right`}>{t.total}</span>
       <span className={`${cls} text-right`}>{t.perMo}</span>
+      <span className={`${cls} text-center`}>{t.lockCol}</span>
       {tab === 'expense' && <span className={`${cls} text-right`}>{t.apr}</span>}
       <span className={`${cls} text-center`}>{t.itemRange}</span>
       <span />
@@ -117,7 +118,7 @@ export function ItemEditor({ items, keys, onChange }: Props) {
     ]);
 
   const patch = (id: string, p: Partial<Item>) =>
-    onChange(items.map((it) => (it.id === id ? { ...it, ...p } : it)));
+    onChange(items.map((it) => (it.id === id ? applyEdit(it, p) : it)));
 
   return (
     <section className="card overflow-hidden">

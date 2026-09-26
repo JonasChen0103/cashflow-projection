@@ -11,6 +11,8 @@ export interface Item {
   startMonth: number;
   /** 0-based, inclusive. */
   endMonth: number;
+  /** Resizing the range holds the monthly figure instead of the total. */
+  lockMonthly?: boolean;
 }
 
 export interface MonthProjection {
@@ -96,6 +98,7 @@ function parseItem(v: unknown, lastMonth: number): Item | null {
     apr: clamp(numOr(it.apr, 0), 0, MAX_APR),
     startMonth,
     endMonth: clamp(Math.round(numOr(it.endMonth, startMonth)), startMonth, lastMonth),
+    lockMonthly: it.lockMonthly === true,
   };
 }
 

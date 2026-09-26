@@ -36,6 +36,20 @@ export const aprOf = (it: Item) => (it.type === 'income' ? 0 : it.apr);
 export const monthlyOf = (it: Item): number =>
   calcMonthly(it.amount, aprOf(it), it.endMonth - it.startMonth + 1);
 
+/**
+ * Apply a row edit. `amount` is a total, so resizing a range silently moves the
+ * monthly figure; an item marked `lockMonthly` — rent, a subscription — respreads
+ * the total instead, holding the monthly. Every row edit funnels through here.
+ */
+export function applyEdit(it: Item, p: Partial<Item>): Item {
+  const next = { ...it, ...p };
+  const periods = next.endMonth - next.startMonth + 1;
+  if (next.lockMonthly && periods !== it.endMonth - it.startMonth + 1) {
+    next.amount = Math.round(calcPrincipal(monthlyOf(it), aprOf(it), periods));
+  }
+  return next;
+}
+
 export const totalInterest = (it: Item): number =>
   monthlyOf(it) * (it.endMonth - it.startMonth + 1) - it.amount;
 
