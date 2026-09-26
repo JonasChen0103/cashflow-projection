@@ -30,6 +30,10 @@ leaves your device.
 - **Installments with APR** — standard amortization (PMT), so a 24-month loan
   at 3.75% shows the real monthly payment and the total interest
 - **Total ⇄ Monthly** — fill in whichever you know; the other is derived
+- **Lock total or monthly** — each row picks which of the two holds when its
+  length changes: the total for an installment plan, the monthly for rent or a salary
+- **Periods box** — type a length next to an item's range instead of counting
+  months in the dropdown
 - **One-time amounts** — collapse any item to a single month with the `1×` toggle
 - **Drag to reorder** — works with a mouse and with touch, auto-scrolling near
   the edges
@@ -81,6 +85,12 @@ those two directives are ignored when they come from a meta tag.
   from it and the number of months, and typing into the monthly field converts
   back. Expenses also take an APR, so the pair converts with standard
   amortization; set APR to `0` for interest-free installments.
+- **Lock** — a row's length can change four ways: either month dropdown, the
+  periods box beside them, and `1×`. Since an item stores a total, that moves the
+  monthly figure — right for a 24-month loan, wrong for rent, where the monthly is
+  the fixed fact. The `Tot`/`Mo` button on each row says which side holds; on `Mo`
+  the total is respread instead. It is saved and exported with the item, and every
+  row edit funnels through one function, so all four resizes agree.
 - **One-time amounts** — the `1×` toggle on an item's range collapses it to a
   single month (a bonus, a scholarship, a one-off purchase).
 - **Window** — set the start month, then give either an end month or a number of
@@ -145,31 +155,14 @@ screen avoids it; so does keeping an exported file.
   Google Fonts cannot take one, since its CSS varies by browser — self-host the
   fonts if you want to remove that dependency entirely.
 
-### Design
-
-A Cyberpunk 2077 palette, but flat: dark mode is plain greyscale — no gradients,
-no glow, no drop shadows — and colour shows up only as signal. Electric yellow
-(`#fcee0a`) is the interactive accent, CP2077 blue (`#007aff`) marks the header,
-neon green (`#00ff9f`) is income and red (`#ff1111`) is expense.
-
-Light and dark both ship; the toggle sits next to the language switch and is
-saved with the rest of your state. Every Tailwind utility resolves to a
-`--color-*` variable, so dark lives in the `@theme` block of
-`src/styles/globals.css` and light is those same names redefined under
-`:root[data-theme="light"]` — the chart follows along for free.
-
-Type is Archivo Black for the page title, IBM Plex Sans for UI, IBM Plex Mono
-for every amount, and LXGW WenKai TC for all Chinese. Archivo Black has no CJK
-glyphs, so the Chinese title falls back to LXGW WenKai TC Bold.
-
-LXGW comes from the `lxgw-wenkai-tc-webfont` package on jsDelivr rather than
-Google Fonts: Google serves it as one unsubsetted 13 MB TTF per weight, while
-the npm build is split into 97 `unicode-range` woff2 chunks of roughly 7 KB, so
-a page only downloads the handful it actually draws.
-
 ### Tech stack
 
 React · TypeScript · Vite · Tailwind CSS · Recharts
+
+Fonts are Archivo Black for the title, IBM Plex Sans and Mono for UI and amounts,
+and LXGW WenKai TC for Chinese — from the `lxgw-wenkai-tc-webfont` package on
+jsDelivr, split into 97 `unicode-range` woff2 chunks of roughly 7 KB, rather than
+Google's unsubsetted 13 MB TTF per weight.
 
 ### Tests
 
@@ -207,6 +200,8 @@ MIT — see [LICENSE](LICENSE).
 - **1 到 600 個月的任意區間** —— 設好起始月份，再給結束月份或月數，另一個會自動跟上
 - **含利率的分期** —— 標準攤還公式（PMT），所以 24 期、年利率 3.75% 會算出真正的月繳金額與總利息
 - **總額 ⇄ 月付** —— 你知道哪個就填哪個，另一個自動換算
+- **固定總額或月付** —— 每筆項目自己決定期數變動時固定哪一邊：分期帳單固定總額，房租或薪水固定月付
+- **期數欄** —— 在項目期間旁邊直接輸入月數，不用在下拉選單裡數月份
 - **一次性金額** —— 用 `1×` 開關把任何項目縮成單一月份
 - **拖曳排序** —— 滑鼠和觸控都可以，拖到邊緣會自動捲動
 - **繁體中文／English**，以及**深色／淺色**佈景
@@ -254,6 +249,11 @@ HTTP header，建議另外在 header 加上 `frame-ancestors 'none'` 和 HSTS �
 - **總額 ⇄ 月付** —— 每個項目存的是總額，月付由總額和月數推算；在月付欄位輸入
   則會反推回總額。支出還可以填年利率，換算時採用標準攤還公式；利率填 `0`
   就是無息分期。
+- **固定** —— 一筆項目的期數有四種改法：兩個月份下拉選單、旁邊的期數欄，以及
+  `1×`。因為項目存的是總額，改期數就會動到月付金額 —— 24 期的貸款本來就該這樣，
+  房租卻不該，因為房租的月付才是固定的事實。每一列的 `總`／`月` 按鈕決定固定
+  哪一邊；選 `月` 時改成重算總額。這個設定會和項目一起儲存、匯出，而且所有列的
+  編輯都走同一個函式，所以四種改法行為一致。
 - **一次性金額** —— 項目期間上的 `1×` 開關會把它縮成單一月份（獎金、獎學金、
   一次性的採購）。
 - **區間** —— 設好起始月份，再給結束月份或月數，另一個會跟著算。兩個都用內建的
@@ -305,30 +305,13 @@ script 可寫入儲存空間刪掉，localStorage 也在內。一個月才開一
   Fonts 無法使用 SRI，因為它的 CSS 會依瀏覽器而異 —— 如果想徹底移除這個外部
   相依，可以改成自行架設字型。
 
-### 視覺設計
-
-Cyberpunk 2077 的配色，但是扁平的：深色模式就是單純的灰階 —— 沒有漸層、沒有
-發光、沒有陰影 —— 顏色只在需要傳達訊息時才出現。電光黃（`#fcee0a`）是互動強調
-色，CP2077 藍（`#007aff`）用在標題區，霓虹綠（`#00ff9f`）是收入，紅色
-（`#ff1111`）是支出。
-
-淺色和深色都有；切換鈕就在語言切換旁邊，並且和其他設定一起儲存。每一個 Tailwind
-utility 最後都會解析成 `--color-*` 變數，所以深色定義在 `src/styles/globals.css`
-的 `@theme` 區塊，淺色就是同一組名稱在 `:root[data-theme="light"]` 底下重新定義
-—— 圖表也就自動跟著切換了。
-
-字體方面，頁面標題用 Archivo Black，介面用 IBM Plex Sans，所有金額用 IBM Plex
-Mono，中文全部用霞鶩文楷 TC。Archivo Black 沒有中日韓字符，所以中文標題會退回
-霞鶩文楷 TC Bold。
-
-霞鶩文楷來自 jsDelivr 上的 `lxgw-wenkai-tc-webfont` 套件，而不是 Google Fonts：
-Google 每個字重都提供一個未經切分的 13 MB TTF，而 npm 版本切成 97 個以
-`unicode-range` 區分的 woff2 分塊，每塊大約 7 KB，所以頁面只會下載真正用到的
-那幾塊。
-
 ### 技術
 
 React · TypeScript · Vite · Tailwind CSS · Recharts
+
+字體是標題用 Archivo Black，介面與金額用 IBM Plex Sans／Mono，中文用霞鶩文楷 TC
+—— 來自 jsDelivr 上的 `lxgw-wenkai-tc-webfont` 套件，切成 97 個以 `unicode-range`
+區分、每塊約 7 KB 的 woff2 分塊，而不是 Google 每個字重一個未切分的 13 MB TTF。
 
 ### 測試
 
