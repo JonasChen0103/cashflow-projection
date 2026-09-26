@@ -147,6 +147,7 @@ interface Props {
 export function ItemRow({ item, keys, onChange, onRemove, onGrab }: Props) {
   const { t } = useLang();
   const periods = item.endMonth - item.startMonth + 1;
+  const perMoLabel = item.type === 'income' ? t.perMoIn : t.perMo;
   const interest = totalInterest(item);
 
   return (
@@ -183,9 +184,9 @@ export function ItemRow({ item, keys, onChange, onRemove, onGrab }: Props) {
       />
       <input
         type="number"
-        title={t.perMo}
-        aria-label={t.perMo}
-        placeholder={t.perMo}
+        title={perMoLabel}
+        aria-label={perMoLabel}
+        placeholder={perMoLabel}
         value={Math.round(monthlyOf(item)) || ''}
         onChange={(e) =>
           onChange({
@@ -196,7 +197,7 @@ export function ItemRow({ item, keys, onChange, onRemove, onGrab }: Props) {
       />
       <button
         onClick={() => onChange({ lockMonthly: !item.lockMonthly })}
-        aria-label={`${t.lockCol}: ${item.lockMonthly ? t.perMo : t.total}`}
+        aria-label={`${t.lockCol}: ${item.lockMonthly ? perMoLabel : t.total}`}
         title={t.lockHint}
         className={`shrink-0 rounded border px-1 py-0.5 text-[11px] font-medium transition-colors ${
           item.lockMonthly

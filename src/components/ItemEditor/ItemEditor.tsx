@@ -12,7 +12,7 @@ function HeaderRow({ tab }: { tab: ItemType }) {
       <span />
       <span className={cls}>{t.name}</span>
       <span className={`${cls} text-right`}>{t.total}</span>
-      <span className={`${cls} text-right`}>{t.perMo}</span>
+      <span className={`${cls} text-right`}>{tab === 'income' ? t.perMoIn : t.perMo}</span>
       <span className={`${cls} text-center`}>{t.lockCol}</span>
       {tab === 'expense' && <span className={`${cls} text-right`}>{t.apr}</span>}
       <span className={`${cls} text-center`}>{t.itemRange}</span>
