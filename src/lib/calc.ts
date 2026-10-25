@@ -34,7 +34,9 @@ export function calcPrincipal(monthly: number, apr: number, periods: number): nu
 export const aprOf = (it: Item) => (it.type === 'income' ? 0 : it.apr);
 
 export const monthlyOf = (it: Item): number =>
-  calcMonthly(it.amount, aprOf(it), it.endMonth - it.startMonth + 1);
+  it.ongoing
+    ? it.amount
+    : calcMonthly(it.amount, aprOf(it), it.endMonth - it.startMonth + 1);
 
 /**
  * Apply a row edit. `amount` is a total, so resizing a range silently moves the
@@ -43,9 +45,20 @@ export const monthlyOf = (it: Item): number =>
  */
 export function applyEdit(it: Item, p: Partial<Item>): Item {
   const next = { ...it, ...p };
-  const periods = next.endMonth - next.startMonth + 1;
-  if (next.lockMonthly && periods !== it.endMonth - it.startMonth + 1) {
-    next.amount = Math.round(calcPrincipal(monthlyOf(it), aprOf(it), periods));
+  if ('ongoing' in p && p.ongoing !== it.ongoing) {
+    if (next.ongoing) {
+      next.amount = Math.round(monthlyOf(it));
+    } else {
+      const periods = next.endMonth - next.startMonth + 1;
+      next.amount = Math.round(calcPrincipal(it.amount, aprOf(it), periods));
+    }
+    return next;
+  }
+  if (!next.ongoing) {
+    const periods = next.endMonth - next.startMonth + 1;
+    if (next.lockMonthly && periods !== it.endMonth - it.startMonth + 1) {
+      next.amount = Math.round(calcPrincipal(monthlyOf(it), aprOf(it), periods));
+    }
   }
   return next;
 }
@@ -65,7 +78,7 @@ export function buildProjection(
     let income = 0;
     let expense = 0;
     items.forEach((it, idx) => {
-      if (mi < it.startMonth || mi > it.endMonth) return;
+      if (mi < it.startMonth || (!it.ongoing && mi > it.endMonth)) return;
       if (it.type === 'income') income += monthly[idx];
       else expense += monthly[idx];
     });
@@ -136,10 +149,17 @@ export function reorder(items: Item[], fromId: string, toId: string): Item[] {
  */
 export function reanchor(items: Item[], from: string, to: string): Item[] {
   const shift = monthDiff(from, to);
-  return items.flatMap((it) => {
-    const endMonth = it.endMonth - shift;
-    return endMonth < 0 ? [] : [{ ...it, startMonth: Math.max(0, it.startMonth - shift), endMonth }];
-  });
+  return items.map((it) => ({
+    ...it,
+    startMonth: it.startMonth - shift,
+    endMonth: it.endMonth - shift,
+  }));
+}
+
+export function indexToMonthKey(startDate: string, idx: number): string {
+  const [y, m] = startDate.split('-').map(Number);
+  const d = new Date(y, m - 1 + idx, 1);
+  return monthKey(d.getFullYear(), d.getMonth());
 }
 
 /** Thin to ~12 x-axis ticks, flagging the ones that start a new year. */

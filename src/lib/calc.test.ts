@@ -119,7 +119,7 @@ assert.deepEqual(ids(reorder(mixed, 'e1', 'i1')), ['e1', 'i1', 'e2', 'e3']);
 assert.deepEqual(ids(reorder(mixed, 'e1', 'nope')), ['e1', 'i1', 'e2', 'e3']);
 assert.deepEqual(ids(mixed), ['e1', 'i1', 'e2', 'e3']);
 
-// reanchor: items keep their calendar months, past ones drop out
+// reanchor: items keep their calendar months
 const shifted = reanchor(
   [
     { id: 'a', name: 'past', type: 'expense', amount: 1, apr: 0, startMonth: 0, endMonth: 1 },
@@ -132,7 +132,8 @@ const shifted = reanchor(
 assert.deepEqual(
   shifted.map((it) => [it.id, it.startMonth, it.endMonth]),
   [
-    ['b', 0, 2],
+    ['a', -3, -2],
+    ['b', -2, 2],
     ['c', 1, 3],
   ],
 );
@@ -213,6 +214,7 @@ const saved = {
       startMonth: 0,
       endMonth: 11,
       lockMonthly: false,
+      ongoing: false,
     },
   ],
   lang: 'en',

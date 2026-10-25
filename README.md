@@ -34,7 +34,19 @@ leaves your device.
   length changes: the total for an installment plan, the monthly for rent or a salary
 - **Periods box** — type a length next to an item's range instead of counting
   months in the dropdown
-- **One-time amounts** — collapse any item to a single month with the `1×` toggle
+- **One-time amounts** — collapse any item to a single month with the `1×` mode
+- **Ongoing items** — mark recurring items like rent or salary as `∞` so they
+  run every month without a set end date
+- **Color-coded chart** — the balance line and fill turn green when the balance
+  is positive, red when it dips below zero; dots on each month follow the same
+  rule
+- **Color-coded inputs** — the mode selector (Range / 1× / ∞), total and
+  monthly fields light up in distinct colours so you can see at a glance how
+  each item is configured
+- **Remaining balance** — range items show how many months and how much money
+  is left from the current month onward
+- **Remove expired** — one button clears every item whose end month is already
+  in the past
 - **Drag to reorder** — works with a mouse and with touch, auto-scrolling near
   the edges
 - **Traditional Chinese / English**, and **dark / light** themes
@@ -85,26 +97,25 @@ those two directives are ignored when they come from a meta tag.
   from it and the number of months, and typing into the monthly field converts
   back. Expenses also take an APR, so the pair converts with standard
   amortization; set APR to `0` for interest-free installments.
-- **Lock** — a row's length can change four ways: either month dropdown, the
+- **Lock** — a row's length can change four ways: either month picker, the
   periods box beside them, and `1×`. Since an item stores a total, that moves the
   monthly figure — right for a 24-month loan, wrong for rent, where the monthly is
   the fixed fact. The `Tot`/`Mo` button on each row says which side holds; on `Mo`
   the total is respread instead. It is saved and exported with the item, and every
   row edit funnels through one function, so all four resizes agree.
-- **One-time amounts** — the `1×` toggle on an item's range collapses it to a
-  single month (a bonus, a scholarship, a one-off purchase).
+- **Mode selector** — a segmented button group (Range / 1× / ∞) on each item
+  controls its schedule. Range items show start and end month pickers plus a
+  period count input. One-time items show only a single month. Ongoing items
+  run every month from their start without an end date.
 - **Window** — set the start month, then give either an end month or a number of
   months; the other follows. Both use a built-in picker (a year stepper plus a
   12-month grid) rather than `<input type="month">`, whose popup is browser
   chrome that CSS cannot reach. The end picker greys out any month before the
-  start, and shortening the window pulls any item that ran past the new end back
-  to the last month.
-- **Jump to this month** — when your window starts in the past, a link next to
-  the start month moves it to the current month. Items keep the calendar months
-  they had, and anything that already finished drops off.
-- **Chart** — projected balance over the window. Red dots mark months where the
-  balance goes negative. The x-axis thins to about 12 ticks however long the
-  window is, and prints the year on a second line only when it changes.
+  start. Changing the start month preserves every item's calendar months.
+- **Chart** — projected balance over the window. The line and fill are green
+  where the balance is positive and red where it is negative; dots on each
+  data point follow the same rule. The x-axis thins to about 12 ticks however
+  long the window is, and prints the year on a second line only when it changes.
 - **Items** — each tab is a table with a header row naming every column. Cells
   stay borderless until you hover or focus them; amounts are right-aligned in
   IBM Plex Mono so the digits line up. Past six items, a `Scroll` toggle caps the
@@ -202,7 +213,12 @@ MIT — see [LICENSE](LICENSE).
 - **總額 ⇄ 月付** —— 你知道哪個就填哪個，另一個自動換算
 - **固定總額或月付** —— 每筆項目自己決定期數變動時固定哪一邊：分期帳單固定總額，房租或薪水固定月付
 - **期數欄** —— 在項目期間旁邊直接輸入月數，不用在下拉選單裡數月份
-- **一次性金額** —— 用 `1×` 開關把任何項目縮成單一月份
+- **一次性金額** —— 用 `1×` 模式把任何項目縮成單一月份
+- **持續項目** —— 把房租或薪水這類每月固定項目標為 `∞`，不需設定結束月份
+- **彩色走勢圖** —— 結餘線條和填色正數為綠色、負數為紅色；每個月的資料點也依正負變色
+- **彩色輸入欄** —— 模式選擇器（期間／1×／∞）、總額、月付欄位會以不同顏色標示，一眼看出每筆項目的設定
+- **剩餘金額** —— 期間項目會顯示從當月起還剩幾期、還有多少金額
+- **移除已過期** —— 一鍵清除所有結束月份早於當月的項目
 - **拖曳排序** —— 滑鼠和觸控都可以，拖到邊緣會自動捲動
 - **繁體中文／English**，以及**深色／淺色**佈景
 - **純本機儲存** —— 沒有後端、沒有帳號、沒有分析追蹤、沒有 cookie
@@ -249,21 +265,21 @@ HTTP header，建議另外在 header 加上 `frame-ancestors 'none'` 和 HSTS �
 - **總額 ⇄ 月付** —— 每個項目存的是總額，月付由總額和月數推算；在月付欄位輸入
   則會反推回總額。支出還可以填年利率，換算時採用標準攤還公式；利率填 `0`
   就是無息分期。
-- **固定** —— 一筆項目的期數有四種改法：兩個月份下拉選單、旁邊的期數欄，以及
+- **固定** —— 一筆項目的期數有四種改法：兩個月份選擇器、旁邊的期數欄，以及
   `1×`。因為項目存的是總額，改期數就會動到月付金額 —— 24 期的貸款本來就該這樣，
   房租卻不該，因為房租的月付才是固定的事實。每一列的 `總`／`月` 按鈕決定固定
   哪一邊；選 `月` 時改成重算總額。這個設定會和項目一起儲存、匯出，而且所有列的
   編輯都走同一個函式，所以四種改法行為一致。
-- **一次性金額** —— 項目期間上的 `1×` 開關會把它縮成單一月份（獎金、獎學金、
-  一次性的採購）。
+- **模式選擇器** —— 每筆項目有一組分段按鈕（期間／1×／∞）。期間項目顯示起迄
+  月份選擇器和期數輸入欄。1× 項目只顯示單一月份。∞ 項目從起始月份開始每月執行，
+  不需設定結束日期。
 - **區間** —— 設好起始月份，再給結束月份或月數，另一個會跟著算。兩個都用內建的
   選擇器（年份切換加 12 個月的格狀選單），而不是 `<input type="month">` ——
   後者的彈出視窗是瀏覽器自己的介面，CSS 碰不到。結束月份的選擇器會把早於起始
-  月份的選項變灰；把區間縮短時，超出新結束月份的項目會被拉回最後一個月。
-- **更新至當月** —— 當你的區間從過去開始時，起始月份旁邊會出現一個連結，把它
-  推進到當月。項目會保留原本的日曆月份，已經結束的項目則會自動移除。
-- **走勢圖** —— 整個區間的結餘預測。紅點標出結餘轉負的月份。不管區間多長，
-  X 軸都會縮減到大約 12 個刻度，而且只有在年份改變時才在第二行印出年份。
+  月份的選項變灰。變更起始月份時，所有項目的日曆月份維持不變。
+- **走勢圖** —— 整個區間的結餘預測。線條和填色正數為綠、負數為紅；每個月的
+  資料點也依正負變色。不管區間多長，X 軸都會縮減到大約 12 個刻度，而且只有在
+  年份改變時才在第二行印出年份。
 - **項目清單** —— 每個分頁都是一張表格，標題列標明每一欄。儲存格平常沒有框線，
   滑過或聚焦時才顯示；金額靠右對齊並使用 IBM Plex Mono，數字會對齊。超過六筆
   之後會出現 `捲動` 開關，可以把清單高度固定成你指定的筆數。

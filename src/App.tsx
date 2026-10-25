@@ -35,10 +35,6 @@ export default function App() {
   /** The window is a viewport: item ranges outlive it, so a shorter window never rewrites them. */
   const setMonths = (n: number) => patch({ months: clampMonths(n) });
 
-  const now = thisMonth();
-  const advance = () =>
-    patch({ startDate: now, items: reanchor(state.items, state.startDate, now) });
-
   const t = dicts[state.lang];
   const picker = useRef<HTMLInputElement>(null);
 
@@ -48,7 +44,7 @@ export default function App() {
     );
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cashflow-${now}.json`;
+    a.download = `cashflow-${thisMonth()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -79,7 +75,7 @@ export default function App() {
 
   return (
     <LangContext.Provider value={{ lang: state.lang, t, setLang: (lang) => patch({ lang }) }}>
-      <main className="mx-auto flex max-w-[760px] flex-col gap-5 px-4 py-8 sm:py-10">
+      <main className="mx-auto flex max-w-[1024px] flex-col gap-5 px-4 py-8 sm:py-10">
         <Header
           range={rangeLabel(keys, state.lang)}
           months={months}
@@ -92,10 +88,9 @@ export default function App() {
           endDate={keys[keys.length - 1]}
           months={months}
           onBalance={(balance) => patch({ balance })}
-          onStartDate={(startDate) => patch({ startDate })}
+          onStartDate={(sd) => patch({ startDate: sd, items: reanchor(state.items, state.startDate, sd) })}
           onEndDate={(end) => setMonths(monthDiff(state.startDate, end) + 1)}
           onMonths={setMonths}
-          onAdvance={state.startDate < now ? advance : undefined}
         />
         <Summary data={data} />
         <ProjectionChart data={data} />

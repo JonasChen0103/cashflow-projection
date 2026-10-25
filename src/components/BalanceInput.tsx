@@ -13,8 +13,6 @@ interface Props {
   onStartDate: (v: string) => void;
   onEndDate: (v: string) => void;
   onMonths: (v: number) => void;
-  /** Set when the window starts before the current month; offers to jump forward. */
-  onAdvance?: () => void;
 }
 
 function Field({
@@ -44,7 +42,6 @@ export function BalanceInput({
   onStartDate,
   onEndDate,
   onMonths,
-  onAdvance,
 }: Props) {
   const { t } = useLang();
   const field =
@@ -84,23 +81,7 @@ export function BalanceInput({
           className={field}
         />
       </Field>
-      <Field
-        label={
-          <span className="flex items-center justify-between gap-2">
-            {t.startDate}
-            {onAdvance && (
-              <button
-                onClick={onAdvance}
-                title={t.advanceHint}
-                className="rounded px-1 text-accent transition-colors hover:underline"
-              >
-                {t.advance}
-              </button>
-            )}
-          </span>
-        }
-        wide
-      >
+      <Field label={t.startDate} wide>
         <MonthPicker label={t.startDate} value={startDate} onChange={onStartDate} />
       </Field>
       <Field label={t.endDate} wide>

@@ -13,6 +13,8 @@ export interface Item {
   endMonth: number;
   /** Resizing the range holds the monthly figure instead of the total. */
   lockMonthly?: boolean;
+  /** The item recurs every month indefinitely; amount stores the monthly figure. */
+  ongoing?: boolean;
 }
 
 export interface MonthProjection {
@@ -89,7 +91,7 @@ function parseItem(v: unknown, lastMonth: number): Item | null {
   if (!v || typeof v !== 'object') return null;
   const it = v as Record<string, unknown>;
   if (it.type !== 'income' && it.type !== 'expense') return null;
-  const startMonth = clamp(Math.round(numOr(it.startMonth, 0)), 0, lastMonth);
+  const startMonth = clamp(Math.round(numOr(it.startMonth, 0)), -MAX_MONTHS, lastMonth);
   return {
     id: typeof it.id === 'string' && it.id ? it.id.slice(0, MAX_NAME) : crypto.randomUUID(),
     name: typeof it.name === 'string' ? it.name.slice(0, MAX_NAME) : '',
@@ -99,6 +101,7 @@ function parseItem(v: unknown, lastMonth: number): Item | null {
     startMonth,
     endMonth: clamp(Math.round(numOr(it.endMonth, startMonth)), startMonth, lastMonth),
     lockMonthly: it.lockMonthly === true,
+    ongoing: it.ongoing === true,
   };
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Item, ItemType } from '../../lib/types';
-import { applyEdit, num, reorder } from '../../lib/calc';
+import { thisMonth } from '../../lib/types';
+import { applyEdit, monthDiff, num, reorder } from '../../lib/calc';
 import { useLang } from '../../i18n';
 import { ItemRow, gridCls } from './ItemRow';
 
@@ -15,7 +16,7 @@ function HeaderRow({ tab }: { tab: ItemType }) {
       <span className={`${cls} text-right`}>{tab === 'income' ? t.perMoIn : t.perMo}</span>
       <span className={`${cls} text-center`}>{t.lockCol}</span>
       {tab === 'expense' && <span className={`${cls} text-right`}>{t.apr}</span>}
-      <span className={`${cls} text-center`}>{t.itemRange}</span>
+      <span className={cls}>{t.mode} / {t.itemRange}</span>
       <span />
     </div>
   );
@@ -42,6 +43,9 @@ export function ItemEditor({ items, keys, onChange }: Props) {
   const [over, setOver] = useState<string>();
 
   const visible = items.filter((it) => it.type === tab);
+  const nowIdx = monthDiff(keys[0], thisMonth());
+  const isExpired = (it: Item) => !it.ongoing && it.endMonth < nowIdx;
+  const hasExpired = items.some(isExpired);
 
   // ponytail: window height from the average row; rows that rewrap on resize
   // re-measure on the next change, per-row measurement if that ever shows.
@@ -121,8 +125,8 @@ export function ItemEditor({ items, keys, onChange }: Props) {
     onChange(items.map((it) => (it.id === id ? applyEdit(it, p) : it)));
 
   return (
-    <section className="card overflow-hidden">
-      <div className="flex border-b border-line">
+    <section className="card">
+      <div className="flex overflow-hidden rounded-t-[inherit] border-b border-line">
         {(['expense', 'income'] as ItemType[]).map((k) => {
           const on = tab === k;
           const count = items.filter((it) => it.type === k).length;
@@ -141,35 +145,46 @@ export function ItemEditor({ items, keys, onChange }: Props) {
             </button>
           );
         })}
-        {visible.length > 6 && (
-          <div className="flex shrink-0 items-center gap-1.5 pr-3 text-xs">
+        <div className="flex shrink-0 items-center gap-1.5 pr-3 text-xs">
+          {hasExpired && (
             <button
-              onClick={() => setScroll((s) => !s)}
-              aria-pressed={scroll}
-              title={t.scrollHint}
-              className={`rounded border px-1.5 py-0.5 text-accent transition-colors ${
-                scroll ? 'border-accent bg-accent/15' : 'border-line hover:bg-hover'
-              }`}
+              onClick={() => onChange(items.filter((it) => !isExpired(it)))}
+              title={t.clearExpiredHint}
+              className="rounded border border-line px-1.5 py-0.5 text-red transition-colors hover:border-red hover:bg-red/10"
             >
-              {t.scroll}
+              {t.clearExpired}
             </button>
-            {scroll && (
-              <>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={rowsDraft}
-                  onChange={(e) => setRowsDraft(e.target.value)}
-                  title={t.rowsHint}
-                  aria-label={t.rowsHint}
-                  className="w-9 rounded border border-line bg-input px-1 py-0.5 text-center text-primary outline-none focus:border-accent"
-                />
-                <span className="text-dim">{t.rowsUnit}</span>
-              </>
-            )}
-          </div>
-        )}
+          )}
+          {visible.length > 6 && (
+            <>
+              <button
+                onClick={() => setScroll((s) => !s)}
+                aria-pressed={scroll}
+                title={t.scrollHint}
+                className={`rounded border px-1.5 py-0.5 text-blue transition-colors ${
+                  scroll ? 'border-blue bg-blue/15' : 'border-line hover:bg-hover'
+                }`}
+              >
+                {t.scroll}
+              </button>
+              {scroll && (
+                <>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={rowsDraft}
+                    onChange={(e) => setRowsDraft(e.target.value)}
+                    title={t.rowsHint}
+                    aria-label={t.rowsHint}
+                    className="w-9 rounded border border-line bg-input px-1 py-0.5 text-center text-primary outline-none focus:border-accent"
+                  />
+                  <span className="text-dim">{t.rowsUnit}</span>
+                </>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <div className="p-3 sm:p-4">

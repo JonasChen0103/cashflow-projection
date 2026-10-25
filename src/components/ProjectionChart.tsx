@@ -14,17 +14,18 @@ import { chartTicks, fmt, fmtMonth, fmtMonthYear, fmtShort } from '../lib/calc';
 import { useLang } from '../i18n';
 
 // SVG attributes ignore Tailwind classes but do resolve var().
-const ACCENT = 'var(--color-accent)';
 const RED = 'var(--color-red)';
 const SURFACE = 'var(--color-card)';
 const LINE = 'var(--color-line)';
 const MUTED = 'var(--color-muted)';
 const DIM = 'var(--color-dim)';
+const GREEN = 'var(--color-green)';
 
 function BalanceDot(props: { cx?: number; cy?: number; payload?: MonthProjection }) {
   const { cx, cy, payload } = props;
-  if (cx == null || cy == null || !payload || payload.balance >= 0) return null;
-  return <circle cx={cx} cy={cy} r={4} fill={RED} stroke={SURFACE} strokeWidth={2} />;
+  if (cx == null || cy == null || !payload) return null;
+  const color = payload.balance >= 0 ? GREEN : RED;
+  return <circle cx={cx} cy={cy} r={3.5} fill={color} stroke={SURFACE} strokeWidth={1.5} />;
 }
 
 function MonthTick(props: {
@@ -57,6 +58,31 @@ export function ProjectionChart({ data }: { data: MonthProjection[] }) {
     [data],
   );
 
+  const gradStops = useMemo(() => {
+    const n = data.length;
+    if (n < 2) return { line: [] as React.ReactNode[], fill: [] as React.ReactNode[] };
+    const c = (i: number) => (data[i].balance >= 0 ? GREEN : RED);
+    const line: React.ReactNode[] = [];
+    const fill: React.ReactNode[] = [];
+    const add = (key: string, off: string, color: string) => {
+      line.push(<stop key={`l${key}`} offset={off} stopColor={color} />);
+      fill.push(<stop key={`f${key}`} offset={off} stopColor={color} stopOpacity={0.15} />);
+    };
+    let cur = c(1);
+    add('s', '0%', cur);
+    for (let i = 2; i < n; i++) {
+      const next = c(i);
+      if (next !== cur) {
+        const pct = `${((i - 1) / (n - 1)) * 100}%`;
+        add(`${i}a`, pct, cur);
+        add(`${i}b`, pct, next);
+        cur = next;
+      }
+    }
+    add('e', '100%', cur);
+    return { line, fill };
+  }, [data]);
+
   return (
     <section className="card p-4 sm:p-5">
       <h2 className="mb-4 text-sm font-medium text-secondary">{t.monthBal}</h2>
@@ -64,9 +90,11 @@ export function ProjectionChart({ data }: { data: MonthProjection[] }) {
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 4, right: 18, bottom: 8, left: -8 }}>
             <defs>
-              <linearGradient id="balFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={ACCENT} stopOpacity={0.28} />
-                <stop offset="100%" stopColor={ACCENT} stopOpacity={0.02} />
+              <linearGradient id="balStroke" x1="0" y1="0" x2="1" y2="0">
+                {gradStops.line}
+              </linearGradient>
+              <linearGradient id="balFill" x1="0" y1="0" x2="1" y2="0">
+                {gradStops.fill}
               </linearGradient>
             </defs>
             <CartesianGrid stroke={LINE} vertical={false} />
@@ -103,13 +131,13 @@ export function ProjectionChart({ data }: { data: MonthProjection[] }) {
             <Area
               type="monotone"
               dataKey="balance"
-              stroke={ACCENT}
+              stroke="url(#balStroke)"
               strokeWidth={2}
               strokeLinejoin="round"
               strokeLinecap="round"
               fill="url(#balFill)"
               dot={<BalanceDot />}
-              activeDot={{ r: 5, fill: ACCENT, stroke: SURFACE, strokeWidth: 2 }}
+              activeDot={<BalanceDot />}
             />
           </AreaChart>
         </ResponsiveContainer>

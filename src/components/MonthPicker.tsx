@@ -11,11 +11,13 @@ interface Props {
   /** Right-hand fields open leftwards so the popup stays inside the card. */
   align?: 'left' | 'right';
   label: string;
+  /** Smaller trigger for inline use (e.g. item rows). */
+  compact?: boolean;
   onChange: (v: string) => void;
 }
 
 /** Hand-rolled: the native <input type="month"> popup is browser chrome that CSS cannot theme. */
-export function MonthPicker({ value, min, align = 'left', label, onChange }: Props) {
+export function MonthPicker({ value, min, align = 'left', label, compact, onChange }: Props) {
   const { lang, t } = useLang();
   const [open, setOpen] = useState(false);
   const [year, setYear] = useState(() => Number(value.slice(0, 4)));
@@ -48,12 +50,14 @@ export function MonthPicker({ value, min, align = 'left', label, onChange }: Pro
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={label}
-        className={`mt-1 flex w-full items-center justify-between gap-2 rounded-lg border bg-input px-2.5 py-1.5 text-left text-[15px] transition-colors ${
-          open ? 'border-blue' : 'border-line hover:border-dim'
-        }`}
+        className={
+          compact
+            ? `flex w-full items-center gap-1 rounded-md border border-transparent bg-transparent px-1.5 py-1 text-left text-[13px] transition-colors hover:border-line hover:bg-input ${open ? '!border-blue' : ''}`
+            : `mt-1 flex w-full items-center justify-between gap-2 rounded-lg border bg-input px-2.5 py-1.5 text-left text-[15px] transition-colors ${open ? 'border-blue' : 'border-line hover:border-dim'}`
+        }
       >
         <span className="truncate tabular-nums text-primary">{fmtMonthYear(value, lang)}</span>
-        <span aria-hidden className="shrink-0 text-xs text-dim">
+        <span aria-hidden className={`shrink-0 text-dim ${compact ? 'text-[10px]' : 'text-xs'}`}>
           ▾
         </span>
       </button>
