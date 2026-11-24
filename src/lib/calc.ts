@@ -79,6 +79,7 @@ export function buildProjection(
     let expense = 0;
     items.forEach((it, idx) => {
       if (mi < it.startMonth || (!it.ongoing && mi > it.endMonth)) return;
+      if (it.paidMonth === key) return; // already in the balance
       if (it.type === 'income') income += monthly[idx];
       else expense += monthly[idx];
     });

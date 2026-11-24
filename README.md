@@ -43,6 +43,9 @@ leaves your device.
 - **Color-coded inputs** — the mode selector (Range / 1× / ∞), total and
   monthly fields light up in distinct colours so you can see at a glance how
   each item is configured
+- **Paid this month** — mark an item as already paid (or received) this month so
+  it isn't counted twice against a balance that already reflects it; the mark
+  clears itself next month
 - **Remaining balance** — range items show how many months and how much money
   is left from the current month onward
 - **Remove expired** — one button clears every item whose end month is already
@@ -217,6 +220,7 @@ MIT — see [LICENSE](LICENSE).
 - **持續項目** —— 把房租或薪水這類每月固定項目標為 `∞`，不需設定結束月份
 - **彩色走勢圖** —— 結餘線條和填色正數為綠色、負數為紅色；每個月的資料點也依正負變色
 - **彩色輸入欄** —— 模式選擇器（期間／1×／∞）、總額、月付欄位會以不同顏色標示，一眼看出每筆項目的設定
+- **本月已付／已收** —— 存款已扣過的項目可標記本月已付，本月不再重複計算，下個月自動恢復
 - **剩餘金額** —— 期間項目會顯示從當月起還剩幾期、還有多少金額
 - **移除已過期** —— 一鍵清除所有結束月份早於當月的項目
 - **拖曳排序** —— 滑鼠和觸控都可以，拖到邊緣會自動捲動

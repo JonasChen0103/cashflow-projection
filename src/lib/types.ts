@@ -15,6 +15,8 @@ export interface Item {
   lockMonthly?: boolean;
   /** The item recurs every month indefinitely; amount stores the monthly figure. */
   ongoing?: boolean;
+  /** "2026-11": already paid/received that month, so the balance already reflects it. */
+  paidMonth?: string;
 }
 
 export interface MonthProjection {
@@ -102,6 +104,7 @@ function parseItem(v: unknown, lastMonth: number): Item | null {
     endMonth: clamp(Math.round(numOr(it.endMonth, startMonth)), startMonth, lastMonth),
     lockMonthly: it.lockMonthly === true,
     ongoing: it.ongoing === true,
+    ...(isMonthKey(it.paidMonth) && { paidMonth: it.paidMonth }),
   };
 }
 

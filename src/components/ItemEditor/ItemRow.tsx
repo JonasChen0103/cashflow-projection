@@ -137,6 +137,12 @@ export function ItemRow({ item, keys, onChange, onRemove, onGrab }: Props) {
   const perMoLabel = item.type === 'income' ? t.perMoIn : t.perMo;
   const interest = item.ongoing ? 0 : totalInterest(item);
 
+  const now = thisMonth();
+  const nowIdx = monthDiff(keys[0], now);
+  const activeNow = nowIdx >= item.startMonth && (item.ongoing || nowIdx <= item.endMonth);
+  const paid = activeNow && item.paidMonth === now;
+  const paidLabel = item.type === 'income' ? t.received : t.paid;
+
   const once = !item.ongoing && item.startMonth === item.endMonth;
   const showLock = !once && !item.ongoing;
 
@@ -172,13 +178,30 @@ export function ItemRow({ item, keys, onChange, onRemove, onGrab }: Props) {
       >
         ⠿
       </span>
-      <input
-        value={item.name}
-        placeholder={t.namePh}
-        aria-label={t.name}
-        onChange={(e) => onChange({ name: e.target.value })}
-        className={`basis-full pl-5 pr-8 font-medium md:basis-auto md:pl-2 md:pr-2 ${textCellCls}`}
-      />
+      <div className="flex min-w-0 basis-full items-center gap-1 pl-5 pr-8 md:basis-auto md:pl-0 md:pr-0">
+        <input
+          value={item.name}
+          placeholder={t.namePh}
+          aria-label={t.name}
+          onChange={(e) => onChange({ name: e.target.value })}
+          className={`min-w-0 flex-1 font-medium ${textCellCls}`}
+        />
+        {activeNow && (
+          <button
+            onClick={() => onChange({ paidMonth: paid ? undefined : now })}
+            aria-pressed={paid}
+            title={t.paidHint}
+            className={`shrink-0 rounded border px-1 py-0.5 text-[11px] font-medium transition-colors ${
+              paid
+                ? 'border-green/50 bg-green/15 text-green'
+                : 'border-line text-dim hover:bg-hover hover:text-secondary'
+            }`}
+          >
+            {paid ? '✓ ' : ''}
+            {paidLabel}
+          </button>
+        )}
+      </div>
       <input
         type="number"
         title={t.total}
@@ -245,8 +268,8 @@ export function ItemRow({ item, keys, onChange, onRemove, onGrab }: Props) {
       </button>
       {(() => {
         const isRange = !item.ongoing && item.startMonth !== item.endMonth;
-        const nowIdx = monthDiff(keys[0], thisMonth());
-        const remainMo = isRange ? Math.max(0, item.endMonth - Math.max(item.startMonth, nowIdx) + 1) : 0;
+        const from = Math.max(item.startMonth, paid ? nowIdx + 1 : nowIdx);
+        const remainMo = isRange ? Math.max(0, item.endMonth - from + 1) : 0;
         const remainAmt = remainMo > 0 ? Math.round(monthlyOf(item)) * remainMo : 0;
         const hasInterest = interest > 0.5;
         const hasRemain = isRange && remainMo > 0 && remainMo < periods;

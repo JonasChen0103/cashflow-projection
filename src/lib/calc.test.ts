@@ -332,3 +332,12 @@ const v1Huge = parseState({
 assert.ok(Math.abs(v1Huge.items[0].amount) <= 1e12);
 
 console.log('ok');
+
+// paidMonth: the item is skipped only in the month it was marked settled
+{
+  const rent: Item = { id: 'r', name: 'rent', type: 'expense', amount: 5000, apr: 0, startMonth: 0, endMonth: 0, ongoing: true, paidMonth: '2026-11' };
+  const p = buildProjection(10000, [rent], ['2026-11', '2026-12']);
+  assert.deepEqual(p.map((m) => m.balance), [10000, 5000]);
+  assert.equal(parseState({ v: 2, items: [rent] }).items[0].paidMonth, '2026-11');
+  assert.equal(parseState({ v: 2, items: [{ ...rent, paidMonth: 'junk' }] }).items[0].paidMonth, undefined);
+}
